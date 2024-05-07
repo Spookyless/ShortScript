@@ -10,6 +10,6 @@ Grammar of ShortScript is contained in [`ShortScript.g4`](./ShortScript.g4) file
 
 Using `antlr4-parse` you can parse sample programs, included in [`/examples`](./examples/) directory.
 
-```
+```shell
 antlr4-parse ShortScript.g4 <entry_point_TBD> -gui examples/assignment.ss
 ```

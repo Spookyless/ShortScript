@@ -6,10 +6,12 @@ Assign                     : '=';
 QuestionMark               : '?';
 Colon                      : ':';
 Dot                        : '.';
+Range                      : Dot Dot;
+RangeInclude               : Dot Dot Assign;
 
 Arrow                      : '=>';
 LongArrow                  : '==>';
-InheritArrow               : '<=';
+InheritArrow               : '<==';
 
 // Logic operations
 LessThan                   : '<';
@@ -28,14 +30,20 @@ Minus                      : '-';
 Multiply                   : '*';
 Divide                     : '/';
 Modulus                    : '%';
+Power                      : '**';
 PlusPlus                   : '++';
 MinusMinus                 : '--';
-Power                      : '**';
 MultiplyAssign             : '*=';
 DivideAssign               : '/=';
 ModulusAssign              : '%=';
 PlusAssign                 : '+=';
 MinusAssign                : '-=';
+
+// Types
+NumberTypeLiteral: 'n';
+BooleanTypeLiteral: 'b';
+StringTypeLiteral: 's';
+VoidTypeLiteral: 'v';
 
 // Brackers
 OpenBracket                : '[';
@@ -48,81 +56,211 @@ CloseBrace                 : '}';
 // Literals
 NullLiteral                : 'null';
 BooleanLiteral             : 'true' | 'false';
-
-// TODO czy rozdzielamy na float i int?
-DecimalLiteral:
-    DecimalIntegerLiteral '.' [0-9]+
+StringLiteral              : '\'' ~['\r\n] '\'';
+IntegerLiteral             : '0' | '-'? [1-9] [0-9]*;
+FloatLiteral
+    : IntegerLiteral '.' [0-9]+
     | '.' [0-9]+
-    | DecimalIntegerLiteral
-;
-fragment DecimalIntegerLiteral: '0' | [1-9] [0-9]*;
+    ;
 
 
-// TODO czy to upraszczamy? O co tu chodzi?
-StringLiteral               : '\'' SingleStringCharacter* '\'';
-fragment SingleStringCharacter: ~['\\\r\n] | '\\' EscapeSequence | LineContinuation;  // po \ może być ', ", \, itp
-fragment EscapeSequence:
-    CharacterEscapeSequence
-    | '0' // no digit ahead! TODO
-;
-fragment LineContinuation: '\\' [\r\n\u2028\u2029]+;
-fragment CharacterEscapeSequence: SingleEscapeCharacter | NonEscapeCharacter;
-fragment SingleEscapeCharacter: ['"\\bfnrtv];
-fragment NonEscapeCharacter: ~['"\\bfnrtv0-9xu\r\n];
 
-// TODO za dużo dziwnych znaczków które niewiadomo co robią
-WhiteSpaces: [\t\u000B\u000C\u0020\u00A0]+ -> channel(HIDDEN);
-LineTerminator: [\r\n\u2028\u2029] -> channel(HIDDEN);
+Whitespace: [ \t\n\r\f]+ -> skip ;
+// Whitespace: [\s]+ -> skip ;
 
 MultiLineComment  : '/*' .*? '*/'             -> channel(HIDDEN);
-SingleLineComment : '//' ~[\r\n\u2028\u2029]* -> channel(HIDDEN);
-
+SingleLineComment : '//' ~[\r\n\u2028\u2029]* -> channel(HIDDEN); // line terminators
 
 
 // Keywords
 Break                      : 'br';
-Else                       : 'e';
-Return                     : 'r';
 Continue                   : 'co';
+Return                     : 'r';
 Loop                       : 'l';
-Function                   : 'f'; // ?
-This                       : 't';
+WhileLoop                  : 'w';
+Function                   : 'f';
 If                         : 'if';
+Else                       : 'e';
+ElseIf                     : 'eif';
 Class                      : 'c';
-Super                      : 's';
+This                       : 't';
+Super                      : '^'; 
 
 
+Identifier: [a-zA-Z_][a-zA-Z_0-9]*;
+
+// ========== Productions ==========
+
+program
+    : sourceElement+ EOF
+    ;
+
+sourceElement
+    : statement
+    | expression
+    ;
+
+statement
+    : conditional
+    | functionDefinition
+    ;
+
+expression
+    : Identifier
+    | literal
+    | entityCall
+    | OpenParen expression CloseParen
+    | expression binaryOperator expression
+    | unaryLogicOperator expression
+    | assignmentExpression
+    | variableDefinition assignment expression
+    ;
 
 
+// ========== If / ElseIf / Else ==========
+conditional
+    : If conditionalHead conditionalBody
+      (ElseIf conditionalHead conditionalBody)*
+      (Else conditionalBody)?
+    ;
+
+conditionalHead
+    : OpenParen expression CloseParen
+    ;
+
+conditionalBody
+    : OpenBrace sourceElement* CloseBrace
+    ;
 
 
+// ========== assignment ==========
+
+assignmentExpression
+    : Identifier assignment expression
+    ;
+
+assignment
+    : Assign
+    | MultiplyAssign
+    | DivideAssign
+    | ModulusAssign
+    | PlusAssign
+    | MinusAssign
+    ;
 
 
-// TODO czy id zadziała dopiero po wszystkich innych keywordach?
-ID: [a-zA-Z_][a-zA-Z_0-9]* ;
-// TODO coś takiego, czy bardziej jak w WhiteSpaces i LineTerminator?
-WS: [ \t\n\r\f]+ -> skip ;
+// ========== operators ==========
+
+binaryOperator
+    : binaryLogicOperator
+    | binaryArithmeticOperator
+    ;
+
+binaryLogicOperator
+    : LessThan
+    | MoreThan
+    | LessThanEquals
+    | GreaterThanEquals
+    | Equals
+    | NotEquals
+    | And
+    | Or
+    ;             
+
+unaryLogicOperator
+    : Not
+    ;
+
+binaryArithmeticOperator
+    : Plus
+    | Minus
+    | Multiply
+    | Divide
+    | Modulus
+    | Power
+    ;
+
+// ========== Variables and types ==========
 
 
+type
+    : NumberTypeLiteral
+    | BooleanTypeLiteral
+    | StringTypeLiteral
+    | VoidTypeLiteral
+    | Identifier
+    | type OpenBracket CloseBracket         // array
+    | OpenBrace type Comma type CloseBrace  // dictionary
+    ;
+
+variableDefinition
+    : type Identifier
+    ;
+
+literal
+    : NullLiteral
+    | BooleanLiteral
+    | StringLiteral
+    | IntegerLiteral
+    | FloatLiteral
+    | dictionaryLiteral
+    ;
+
+dictionaryLiteral
+    : OpenBrace (expression Colon expression)* CloseBrace
+    ;
+
+// ========== Loops ==========
+
+loopStatement
+    : loopHead loopBody
+    ;
+
+loopHead
+    : nLoopHead
+    | forLoopHead
+    | whileLoopHead
+    ;
+
+loopBody
+    : (sourceElement | Break | Continue)*
+    ;
+
+nLoopHead
+    : Loop OpenParen expression CloseParen 
+    ;
+
+forLoopHead
+    : Loop Assign expression Range expression 
+    | Loop Assign expression RangeInclude expression 
+    ;
+
+whileLoopHead
+    : WhileLoop OpenParen expression CloseParen
+    ;
+
+// ========== function ==========
+entityCall
+    : Identifier OpenParen (expression (Comma expression)*)? CloseParen
+    ;
+
+functionDefinition
+: type Function Identifier
+    OpenParen 
+        (variableDefinition (Comma variableDefinition)*)? 
+    CloseParen 
+    OpenBrace 
+        sourceElement*
+        (Return expression?)?
+    CloseBrace
+;
 
 
-// program
-//     : stat EOF
-//     | def EOF
-//     ;
+// ========== Classes ==========
 
-// stat: ID '=' expr ';'
-//     | expr ';'
-//     ;
-
-// def : ID '(' ID (',' ID)* ')' '{' stat* '}' ;
-
-// expr: ID
-//     | INT
-//     | func
-//     | 'not' expr
-//     | expr 'and' expr
-//     | expr 'or' expr
-//     ;
-
-// func : ID '(' expr (',' expr)* ')' ;
+classDefinition
+    : Class Identifier (InheritArrow Identifier)?
+        OpenBracket
+            (variableDefinition | functionDefinition)*
+        CloseBracket
+    ;
