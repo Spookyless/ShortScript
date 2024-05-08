@@ -214,7 +214,7 @@ literal
     ;
 
 dictionaryLiteral
-    : OpenBrace (expression Colon expression)* CloseBrace
+    : OpenBrace ((expression Colon expression Comma)* (expression Colon expression))? CloseBrace
     ;
 
 // ========== Loops ==========
