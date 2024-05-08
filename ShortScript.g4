@@ -111,8 +111,11 @@ expression
     | OpenParen expression CloseParen
     | expression binaryOperator expression
     | unaryLogicOperator expression
+    | unaryArithmeticOperator expression
+    | expression unaryArithmeticOperator
     | assignmentExpression
     | variableDefinition assignment expression
+    | variableDefinition
     ;
 
 
@@ -166,10 +169,6 @@ binaryLogicOperator
     | Or
     ;             
 
-unaryLogicOperator
-    : Not
-    ;
-
 binaryArithmeticOperator
     : Plus
     | Minus
@@ -177,6 +176,15 @@ binaryArithmeticOperator
     | Divide
     | Modulus
     | Power
+    ;
+
+unaryLogicOperator
+    : Not
+    ;
+
+unaryArithmeticOperator
+    : PlusPlus
+    | MinusMinus
     ;
 
 // ========== Variables and types ==========
