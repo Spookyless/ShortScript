@@ -102,6 +102,7 @@ sourceElement
 statement
     : conditional
     | functionDefinition
+    | classDefinition
     ;
 
 expression
@@ -267,7 +268,7 @@ functionDefinition
 
 classDefinition
     : Class Identifier (InheritArrow Identifier)?
-        OpenBracket
+        OpenBrace
             (variableDefinition | functionDefinition)*
-        CloseBracket
+        CloseBrace
     ;
