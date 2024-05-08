@@ -215,10 +215,15 @@ literal
     | IntegerLiteral
     | FloatLiteral
     | dictionaryLiteral
+    | arrayLiteral
     ;
 
 dictionaryLiteral
     : OpenBrace ((expression Colon expression Comma)* (expression Colon expression))? CloseBrace
+    ;
+
+arrayLiteral
+    : OpenBracket (expression Comma)* expression CloseBracket
     ;
 
 // ========== Loops ==========
