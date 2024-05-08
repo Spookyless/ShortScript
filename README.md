@@ -1,15 +1,24 @@
 # ShortScript
 
+Custom interpreted language focused on minimal syntax
+
 ## Prerequisites
 
-Install antlr4 following the [official documentation](https://github.com/antlr/antlr4/blob/master/doc/getting-started.md)
+To build and run the interpreter, you need to have `antlr4` installed on your system and present on `PATH`. It is advised to follow [the official documentation](https://github.com/antlr/antlr4/blob/master/doc/getting-started.md).
 
-## Usage
+For additional features (such us grammar testing), you also need to install `antlr4-tools`, using [the official documentation](https://github.com/antlr/antlr4-tools/blob/master/README.md).
 
-Grammar of ShortScript is contained in [`ShortScript.g4`](./ShortScript.g4) file, with entry point `TBD`.
+## Development
 
-Using `antlr4-parse` you can parse sample programs, included in [`/examples`](./examples/) directory.
+[`ShortScript.g4`](./ShortScript.g4) file contains the whole grammar of the language.
 
+## Testing
+
+### Grammar
+
+To run tests on bare grammar, use the appropriate script:
 ```shell
-antlr4-parse ShortScript.g4 <entry_point_TBD> -gui examples/assignment.ss
+npm run test:grammar
 ```
+
+Test cases are located inside [`examples`](./examples/) directory.

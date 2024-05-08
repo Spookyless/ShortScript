@@ -8,7 +8,7 @@
   },
   "type": "module",
   "scripts": {
-    "test": "NODE_NO_WARNINGS=1 node bin/runTest.js"
+    "test:grammar": "NODE_NO_WARNINGS=1 node bin/runTest.js"
   },
   "contributors": [
     {
