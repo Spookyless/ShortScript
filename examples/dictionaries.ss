@@ -1,12 +1,13 @@
 {s, n} testDict = {
 }
 
-{s, n} testDict = {
-   'test': 123
+{b, NumberTest} testDict = {
+   true: NumberTest(),
+   false: StringTest()
 }
 
-{s, n} testDict = {
-   'test': 123,
-   'test1':33
+{v, b} testDict = {
+   "sdf": {1: VoidTest()},
+   1: [1, 2, 3, 4, 5, 6, 7]
 }
 
