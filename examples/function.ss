@@ -1,11 +1,11 @@
-v f foo() {
+v f fo() {
   5 + x
 }
 
-n f plus(n x, n y) {
+n f p(n x, n y) {
     r x + y
 }
 
-foo f bar() {}
+fo f ba() {}
 
 baz()

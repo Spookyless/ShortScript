@@ -81,7 +81,6 @@ WhileLoop                  : 'w';
 Function                   : 'f';
 If                         : 'if';
 Else                       : 'e';
-ElseIf                     : 'eif';
 Class                      : 'c';
 This                       : 't';
 Super                      : '^'; 
@@ -120,7 +119,7 @@ expression
 // ========== If / ElseIf / Else ==========
 conditional
     : If conditionalHead conditionalBody
-      (ElseIf conditionalHead conditionalBody)*
+      (Else If conditionalHead conditionalBody)*
       (Else conditionalBody)?
     ;
 

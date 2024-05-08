@@ -1,0 +1,31 @@
+{
+  "name": "shortscript",
+  "version": "1.0.0",
+  "description": "Custom interpreted language focused on minimal syntax",
+  "directories": {
+    "example": "examples",
+    "test": "examples"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "NODE_NO_WARNINGS=1 node bin/runTest.js"
+  },
+  "contributors": [
+    {
+      "name": "Michał Broś",
+      "url": "https://github.com/MBrosik"
+    },
+    {
+      "name": "Filip Kowalski",
+      "url": "https://github.com/Spookyless"
+    },
+    {
+      "name": "Krzysztof Wrona",
+      "url": "https://github.com/rubikon02"
+    }
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "cli-color": "^2.0.4"
+  }
+}
