@@ -103,6 +103,9 @@ statement
     : conditional
     | functionDefinition
     | classDefinition
+    | loopStatement
+    | Continue
+    | Break
     ;
 
 expression
@@ -221,7 +224,7 @@ dictionaryLiteral
 // ========== Loops ==========
 
 loopStatement
-    : loopHead loopBody
+    : loopHead OpenBrace loopBody CloseBrace
     ;
 
 loopHead
@@ -231,7 +234,7 @@ loopHead
     ;
 
 loopBody
-    : (sourceElement | Break | Continue)*
+    : sourceElement*
     ;
 
 nLoopHead
@@ -239,8 +242,7 @@ nLoopHead
     ;
 
 forLoopHead
-    : Loop Assign expression Range expression 
-    | Loop Assign expression RangeInclude expression 
+    : Loop OpenParen variableDefinition Assign expression (Range | RangeInclude) expression CloseParen
     ;
 
 whileLoopHead
