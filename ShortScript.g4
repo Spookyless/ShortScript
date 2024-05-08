@@ -56,7 +56,7 @@ CloseBrace                 : '}';
 // Literals
 NullLiteral                : 'null';
 BooleanLiteral             : 'true' | 'false';
-StringLiteral              : '\'' ~['\r\n] '\'';
+StringLiteral              : '\'' ~['\r\n]* '\'';
 IntegerLiteral             : '0' | '-'? [1-9] [0-9]*;
 FloatLiteral
     : IntegerLiteral '.' [0-9]+
