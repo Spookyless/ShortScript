@@ -112,6 +112,7 @@ expression
     : Identifier
     | Identifier subscriptOperator? (Dot expression)?
     | literal
+    | Super
     | entityCall
     | OpenParen expression CloseParen
     | expression binaryOperator expression
