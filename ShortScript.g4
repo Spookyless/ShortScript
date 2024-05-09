@@ -109,7 +109,7 @@ statement
     ;
 
 expression
-    : Identifier
+    : Identifier subscriptOperator? (Dot expression)?
     | literal
     | entityCall
     | OpenParen expression CloseParen
@@ -226,6 +226,11 @@ arrayLiteral
     : OpenBracket (expression Comma)* expression CloseBracket
     ;
 
+subscriptOperator
+    : OpenBracket expression CloseBracket
+    ;
+    
+
 // ========== Loops ==========
 
 loopStatement
@@ -255,8 +260,15 @@ whileLoopHead
     ;
 
 // ========== function ==========
+// Do zmiany
 entityCall
-    : Identifier OpenParen (expression (Comma expression)*)? CloseParen
+    : primaryExpression OpenParen (expression (Comma expression)*)? CloseParen
+    ;
+
+primaryExpression
+    : Identifier subscriptOperator? (Dot expression)?
+    | literal
+    | OpenParen expression CloseParen
     ;
 
 functionDefinition
@@ -273,9 +285,23 @@ functionDefinition
 
 // ========== Classes ==========
 
+superDefintion
+    : (Super OpenParen (expression (Comma expression)*)?  CloseParen)
+    ;
+    
+constructorDefintion
+    : Identifier Identifier OpenParen (variableDefinition (Comma variableDefinition)*)? CloseParen
+    OpenBrace
+        sourceElement* 
+        superDefintion?
+        sourceElement* 
+    CloseBrace
+    ;
+
 classDefinition
     : Class Identifier (InheritArrow Identifier)?
         OpenBrace
+            constructorDefintion?
             (variableDefinition | functionDefinition)*
         CloseBrace
     ;
