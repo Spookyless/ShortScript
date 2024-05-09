@@ -192,6 +192,11 @@ unaryArithmeticOperator
     | MinusMinus
     ;
 
+subscriptOperator
+    : OpenBracket expression CloseBracket
+    ;
+    
+
 // ========== Variables and types ==========
 
 
@@ -226,11 +231,6 @@ dictionaryLiteral
 arrayLiteral
     : OpenBracket (expression Comma)* expression CloseBracket
     ;
-
-subscriptOperator
-    : OpenBracket expression CloseBracket
-    ;
-    
 
 // ========== Loops ==========
 
@@ -286,19 +286,6 @@ functionDefinition
 
 
 // ========== Classes ==========
-
-// superDefintion
-//     : (Super OpenParen (expression (Comma expression)*)?  CloseParen)
-//     ;
-
-// constructorDefintion
-//     : Identifier Identifier OpenParen (variableDefinition (Comma variableDefinition)*)? CloseParen
-//     OpenBrace
-//         sourceElement* 
-//         superDefintion?
-//         sourceElement* 
-//     CloseBrace
-//     ;
 
 classDefinition
     : Class Identifier (InheritArrow Identifier)?
