@@ -109,7 +109,8 @@ statement
     ;
 
 expression
-    : Identifier subscriptOperator? (Dot expression)?
+    : Identifier
+    | Identifier subscriptOperator? (Dot expression)?
     | literal
     | entityCall
     | OpenParen expression CloseParen
@@ -267,6 +268,7 @@ entityCall
 
 primaryExpression
     : Identifier subscriptOperator? (Dot expression)?
+    | Super
     | literal
     | OpenParen expression CloseParen
     ;
@@ -285,23 +287,22 @@ functionDefinition
 
 // ========== Classes ==========
 
-superDefintion
-    : (Super OpenParen (expression (Comma expression)*)?  CloseParen)
-    ;
-    
-constructorDefintion
-    : Identifier Identifier OpenParen (variableDefinition (Comma variableDefinition)*)? CloseParen
-    OpenBrace
-        sourceElement* 
-        superDefintion?
-        sourceElement* 
-    CloseBrace
-    ;
+// superDefintion
+//     : (Super OpenParen (expression (Comma expression)*)?  CloseParen)
+//     ;
+
+// constructorDefintion
+//     : Identifier Identifier OpenParen (variableDefinition (Comma variableDefinition)*)? CloseParen
+//     OpenBrace
+//         sourceElement* 
+//         superDefintion?
+//         sourceElement* 
+//     CloseBrace
+//     ;
 
 classDefinition
     : Class Identifier (InheritArrow Identifier)?
         OpenBrace
-            constructorDefintion?
             (variableDefinition | functionDefinition)*
         CloseBrace
     ;

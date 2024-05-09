@@ -1,5 +1,3 @@
-// TODO: zrobić testy dla tablic
-
 n[] testArr = [Class, {'testString': 123}, 5, 'sad']
 
 testArr[3]

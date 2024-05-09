@@ -22,7 +22,7 @@ c TestClass1 <== TestClass {
 }
 
 c TestClass1{
-   TestClass1 TestClass1() {
+   TestClass1 f TestClass1() {
       n test = 1
    }
    s testString
@@ -33,7 +33,7 @@ c TestClass1{
 }
 
 c TestClass1 <== TestClass {
-   TestClass1 TestClass1() {
+   TestClass1 f TestClass1() {
       s test1 = '2'
       ^(1, 2, 3, 4)
       n test = 1
