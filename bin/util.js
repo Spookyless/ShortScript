@@ -39,15 +39,14 @@ export const scoreTestResult = (result, testsDir = "") => {
   const { testCasePath, passed, error } = result;
 
   const shortTestCasePath = testCasePath.substring(testCasePath.lastIndexOf(testsDir));
-
   if (passed === true) {
     console.log(`Test ${shortTestCasePath} ${cli.green('passed')}`);
   } else {
+    console.log();
     console.log(`Test ${shortTestCasePath} ${cli.red('failed')}`);
     console.log(error.trim());
+    console.log();
   }
-
-  console.log();
 
   return passed;
 }
