@@ -1,7 +1,7 @@
 import { ShortScriptLexer } from "antlr/ShortScriptLexer";
 import { ShortScriptParser } from "antlr/ShortScriptParser";
 import { ShortScriptListener } from "antlr/ShortScriptListener";
-import { ANTLRInputStream, CommonTokenStream } from "antlr4ts";
+import { CommonTokenStream, CharStreams } from "antlr4ts";
 import { ParseTreeWalker } from "antlr4ts/tree/ParseTreeWalker";
 import { ShortScriptListenerFull } from "src/ShortScriptListenerFull";
 
@@ -25,7 +25,7 @@ n f Fibonacci(n num){
 
 Fibonacci(9)
 `;
-const inputStream = new ANTLRInputStream(input);
+const inputStream = CharStreams.fromString(input);
 const lexer = new ShortScriptLexer(inputStream);
 const tokenStream = new CommonTokenStream(lexer);
 const parser = new ShortScriptParser(tokenStream);
