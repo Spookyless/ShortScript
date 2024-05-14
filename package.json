@@ -8,7 +8,11 @@
   },
   "type": "module",
   "scripts": {
-    "test:grammar": "node --no-warnings bin/runTest.js"
+    "test:grammar": "NODE_OPTIONS='--no-warnings' tsx bin/runTest.js",
+    "test": "npm run test:grammar",
+    "build:grammar": "antlr4ts -o src/antlr ShortScript.g4",
+    "build": "npm run build:grammar",
+    "start": "tsx index.ts"
   },
   "contributors": [
     {
@@ -25,7 +29,18 @@
     }
   ],
   "license": "MIT",
+  "dependencies": {
+    "antlr4ts": "^0.5.0-alpha.4",
+    "antlr4ts-cli": "^0.5.0-alpha.4",
+    "tsx": "^4.10.2"
+  },
   "devDependencies": {
-    "cli-color": "^2.0.4"
+    "@types/cli-color": "^2.0.6",
+    "@types/node": "^20.12.11",
+    "cli-color": "^2.0.4",
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }
