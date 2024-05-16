@@ -10,7 +10,7 @@
   "scripts": {
     "test:grammar": "NODE_OPTIONS='--no-warnings' tsx bin/runTest.js",
     "test": "npm run test:grammar",
-    "build:grammar": "antlr4ts -o src/antlr ShortScript.g4",
+    "build:grammar": "antlr4ts -no-listener -visitor -o src/antlr ShortScript.g4",
     "build": "npm run build:grammar",
     "start": "tsx index.ts"
   },

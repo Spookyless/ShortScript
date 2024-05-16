@@ -17,7 +17,7 @@ InheritArrow               : '<==';
 LessThan                   : '<';
 MoreThan                   : '>';
 LessThanEquals             : '<=';
-GreaterThanEquals          : '>=';
+MoreThanEquals             : '>=';
 Equals                     : '==';
 NotEquals                  : '!=';
 And                        : '&&';
@@ -91,7 +91,7 @@ Identifier: [a-zA-Z_][a-zA-Z_0-9]*;
 // ========== Productions ==========
 
 program
-    : sourceElement+ EOF
+    : sourceElement+
     ;
 
 sourceElement
@@ -109,19 +109,30 @@ statement
     ;
 
 expression
-    : Identifier
-    | Identifier subscriptOperator? (Dot expression)?
-    | literal
-    | Super
-    | entityCall
-    | OpenParen expression CloseParen
-    | expression binaryOperator expression
-    | unaryLogicOperator expression
-    | unaryArithmeticOperator expression
-    | expression unaryArithmeticOperator
-    | assignmentExpression
-    | variableDefinition assignment expression
-    | variableDefinition
+    : Identifier # IdentifierExpression
+    | Identifier subscriptOperator? (Dot expression)? # IdentifierSubscriptExpression
+    | literal # LiteralExpression
+    | Super # SuperExpression
+    | entityCall #EntityCallExpression
+
+    // Operators
+    | PlusPlus expression # PreIncrementExpression
+    | MinusMinus expression # PreDecrementExpression
+    | Minus expression # UnaryMinutExpression
+    | Not expression # NotExpression
+    | < assoc = right > left=expression Power right=expression #PowerExpression
+    | left=expression op=(Multiply | Divide | Modulus) right=expression # MultiplicativeExpression
+    | left=expression op=(Plus | Minus) right=expression # AdditiveExpression
+    | left=expression op=(LessThan | LessThanEquals | MoreThan | MoreThanEquals) right=expression # RelationalExpression
+    | left=expression op=(Equals | NotEquals) right=expression # EqualityExpression
+    | left=expression And right=expression # LogicalAndExpression
+    | left=expression Or right=expression # LogicalOrExpression
+
+    // Rest
+    | Identifier assignment expression # AssignmentExpression
+    | variableDefinition assignment expression # VariableDefinitionWithAssignmentExpression
+    | variableDefinition # variableDefinitionExpression
+    | OpenParen expression CloseParen # GroupExpression
     ;
 
 
@@ -142,10 +153,6 @@ conditionalBody
 
 
 // ========== assignment ==========
-
-assignmentExpression
-    : Identifier assignment expression
-    ;
 
 assignment
     : Assign
@@ -168,7 +175,7 @@ binaryLogicOperator
     : LessThan
     | MoreThan
     | LessThanEquals
-    | GreaterThanEquals
+    | MoreThanEquals
     | Equals
     | NotEquals
     | And
