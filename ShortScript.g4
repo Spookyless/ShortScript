@@ -118,6 +118,8 @@ expression
     // Operators
     | PlusPlus expression # PreIncrementExpression
     | MinusMinus expression # PreDecrementExpression
+    | expression PlusPlus # PostIncrementExpression
+    | expression MinusMinus # PostDecrementExpression
     | Minus expression # UnaryMinutExpression
     | Not expression # NotExpression
     | < assoc = right > left=expression Power right=expression #PowerExpression
@@ -131,7 +133,7 @@ expression
     // Rest
     | Identifier assignment expression # AssignmentExpression
     | variableDefinition assignment expression # VariableDefinitionWithAssignmentExpression
-    | variableDefinition # variableDefinitionExpression
+    | variableDefinition # VariableDefinitionExpression
     | OpenParen expression CloseParen # GroupExpression
     ;
 
