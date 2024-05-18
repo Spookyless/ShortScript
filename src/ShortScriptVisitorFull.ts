@@ -14,6 +14,7 @@ import { ErrorNode } from "antlr4ts/tree/ErrorNode";
 import { RuleNode } from "antlr4ts/tree/RuleNode";
 import { ParseTree } from "antlr4ts/tree/ParseTree";
 import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
+import { LineError } from "./LineError";
 
 export class ShortScriptVisitorFull
 	extends AbstractParseTreeVisitor<any>
@@ -99,7 +100,7 @@ export class ShortScriptVisitorFull
 		if (this.variables.hasOwnProperty(identifier)) {
 			return this.variables[identifier];
 		} else {
-			throw new Error(`Variable ${identifier} is not defined`);
+			throw new LineError(ctx, `Variable ${identifier} is not defined`);
 		}
 	};
 
