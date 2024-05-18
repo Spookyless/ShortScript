@@ -7,6 +7,10 @@ import {
 	PowerExpressionContext,
 	VariableDefinitionWithAssignmentExpressionContext,
 	VariableDefinitionExpressionContext,
+	FunctionDefinitionContext,
+	VariableDefinitionContext,
+	ExpressionContext,
+	IdentifierCallExpressionContext,
 } from "antlr/ShortScriptParser";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { ShortScriptVisitor } from "antlr/ShortScriptVisitor";
@@ -128,6 +132,38 @@ export class ShortScriptVisitorFull
 			result = this.aggregateResult(result, childResult);
 		}
 		return result;
+	}
+
+	visitFunctionDefinition(ctx: FunctionDefinitionContext): any {
+		const returnType = ctx.type().text;
+		const identifier = ctx.Identifier().text;
+		const functionBody = ctx.sourceElement();		// Is this correct
+
+		const functionArgs = ctx.variableDefinition();
+		let args: string[] = [];
+		if (functionArgs) {
+			args = functionArgs.map((arg: VariableDefinitionContext) => arg.Identifier().text);
+		}
+
+		// To be changed
+		this.variables[identifier] = {
+			returnType,
+			args,
+			body: functionBody
+		};
+
+		return null;
+	}
+
+	visitIdentifierCallExpression(ctx: IdentifierCallExpressionContext): any {
+		const identifier = ctx.Identifier().text;
+		const args = ctx.expression() ? ctx.expression().map((exp: ExpressionContext) => this.visit(exp)) : [];
+
+		if (this.variables.hasOwnProperty(identifier)) {
+			return this.variables[identifier](...args);		// Has to use body of the function
+		} else {
+			throw new LineError(ctx, `Function ${identifier} is not defined`);
+		}
 	}
 
 	visitTerminal(node: TerminalNode) {

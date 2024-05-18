@@ -111,6 +111,7 @@ statement
 expression
     : Identifier # IdentifierExpression
     | Identifier subscriptOperator? (Dot expression)? # IdentifierSubscriptExpression
+    | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression
     | literal # LiteralExpression
     | Super # SuperExpression
     | entityCall #EntityCallExpression
