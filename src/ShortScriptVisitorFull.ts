@@ -1,8 +1,12 @@
 import {
 	AdditiveExpressionContext,
+	AssignmentExpressionContext,
+	IdentifierExpressionContext,
 	LiteralContext,
 	MultiplicativeExpressionContext,
 	PowerExpressionContext,
+	VariableDefinitionWithAssignmentExpressionContext,
+	VariableDefinitionExpressionContext,
 } from "antlr/ShortScriptParser";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { ShortScriptVisitor } from "antlr/ShortScriptVisitor";
@@ -13,8 +17,10 @@ import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor
 
 export class ShortScriptVisitorFull
 	extends AbstractParseTreeVisitor<any>
-	implements ShortScriptVisitor<any>
-{
+	implements ShortScriptVisitor<any> {
+
+	private variables: { [key: string]: any } = {};
+
 	visitPowerExpression: (ctx: PowerExpressionContext) => any = (ctx) => {
 		return this.visit(ctx._left) ** this.visit(ctx._right);
 	};
@@ -70,8 +76,39 @@ export class ShortScriptVisitorFull
 		}
 
 		if ((node = ctx.StringLiteral())) {
-			return node.text;
+			return node.text.slice(1, -1); // remove the quotes
 		}
+	};
+
+	visitVariableDefinitionWithAssignmentExpression: (ctx: VariableDefinitionWithAssignmentExpressionContext) => any = (ctx) => {
+		const identifier = ctx.variableDefinition().Identifier().text;
+		const value = this.visit(ctx.expression());
+		this.variables[identifier] = value;
+		return value;
+	};
+
+	visitAssignmentExpression: (ctx: AssignmentExpressionContext) => any = (ctx) => {
+		const identifier = ctx.Identifier().text;
+		const value = this.visit(ctx.expression());
+		this.variables[identifier] = value;
+		return value;
+	};
+
+	visitIdentifierExpression: (ctx: IdentifierExpressionContext) => any = (ctx) => {
+		const identifier = ctx.Identifier().text;
+		if (this.variables.hasOwnProperty(identifier)) {
+			return this.variables[identifier];
+		} else {
+			throw new Error(`Variable ${identifier} is not defined`);
+		}
+	};
+
+	visitVariableDefinitionExpression: (ctx: VariableDefinitionExpressionContext) => any = (ctx) => {
+		const identifier = ctx.variableDefinition().Identifier().text;
+		if (!this.variables.hasOwnProperty(identifier)) {
+			this.variables[identifier] = undefined;
+		}
+		return this.variables[identifier];
 	};
 
 	visit(tree: ParseTree): any {
