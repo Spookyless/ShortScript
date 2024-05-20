@@ -136,6 +136,7 @@ expression
     | variableDefinition assignment expression # VariableDefinitionWithAssignmentExpression
     | variableDefinition # VariableDefinitionExpression
     | OpenParen expression CloseParen # GroupExpression
+    | Return expression? # ReturnExpression
     ;
 
 
@@ -290,11 +291,9 @@ functionDefinition
         (variableDefinition (Comma variableDefinition)*)? 
     CloseParen 
     OpenBrace 
-        sourceElement*
-        (Return expression?)?
+        sourceElement*        
     CloseBrace
 ;
-
 
 // ========== Classes ==========
 

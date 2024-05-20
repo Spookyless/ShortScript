@@ -12,6 +12,7 @@ import {
 	ExpressionContext,
 	IdentifierCallExpressionContext,
 	SourceElementContext,
+	ReturnExpressionContext,
 } from "antlr/ShortScriptParser";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { ShortScriptVisitor } from "antlr/ShortScriptVisitor";
@@ -20,12 +21,13 @@ import { RuleNode } from "antlr4ts/tree/RuleNode";
 import { ParseTree } from "antlr4ts/tree/ParseTree";
 import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
 import { LineError } from "./LineError";
+import ReturnExpression from "./ReturnExpression";
 
 type FunctionValue = {
 	returnType:string,
 	args: string[][],
 	body:SourceElementContext[],
-	return?: ExpressionContext
+	// return?: ExpressionContext
 }
 
 export class ShortScriptVisitorFull
@@ -145,26 +147,25 @@ export class ShortScriptVisitorFull
 	visitFunctionDefinition(ctx: FunctionDefinitionContext): any {
 		const returnType = ctx.type().text;
 		const identifier = ctx.Identifier().text;
-		const functionBody = ctx.sourceElement();		// Is this correct
-		const returnExpression = ctx.expression();
+		const functionBody = ctx.sourceElement();
 
 		const functionArgs = ctx.variableDefinition();
 		let args: string[][] = [];
+		
 		if (functionArgs) {
 			args = functionArgs.map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]);
 		}
-
-		// To be changed
 		this.variables[identifier] = {
 			returnType,
 			args,
-			body: functionBody,
-			return: returnExpression
-		};
-		// console.log(this.variables[identifier])	
-		// console.log(returnExpression?.text)
+			body: functionBody,		
+		};		
 		
 		return null;
+	}
+
+	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx =>{
+		return new ReturnExpression(ctx.expression());		
 	}
 
 	visitIdentifierCallExpression(ctx: IdentifierCallExpressionContext): any {
@@ -173,27 +174,30 @@ export class ShortScriptVisitorFull
 
 		console.log(args)
 		
-		if (this.variables.hasOwnProperty(identifier)) { // TODO: check if this.variables[identifier] is a function
-			// console.log(this.variables[identifier])
-			const funcVar = this.variables[identifier] as FunctionValue
-			const returnStatement = funcVar.return
+		if (this.variables.hasOwnProperty(identifier)) { // TODO: check if this.variables[identifier] is a function			
+			const funcVar = this.variables[identifier] as FunctionValue			
 			const tempVars = funcVar.args.map(el => [el[1], this.variables[el[1]]])
 
 			funcVar.args.forEach((el, key) =>{
 				this.variables[el[1]] = args[key]
 			})			
+			
+			let whatToReturn = null
 
-			funcVar.body.forEach(el => {
-				this.visit(el)						
-			})
+			for (const el of funcVar.body) {
+				let aa = this.visit(el)
 
-			const whatToReturn = returnStatement ? this.visit(returnStatement) : null;
+				if(aa instanceof ReturnExpression){
+					if(aa.value)
+						whatToReturn = this.visit(aa.value)
+					break;
+				}						
+			}
 
 			tempVars.forEach(el => {
 				this.variables[el[0]] = el[1]
 			})
-
-			// return this.variables[identifier](...args);		// Has to use body of the function
+			
 			return whatToReturn;
 		} else {
 			throw new LineError(ctx, `Function ${identifier} is not defined`);

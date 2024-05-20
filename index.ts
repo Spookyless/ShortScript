@@ -9,11 +9,12 @@ const input = `
 n f Fibonacci(n num){
     n num1 = 0
     n num2 = 2
-    n next_num = num2
-    n count = 1  
+    n next_num = num2     
 
-    next_num = 3 + count
+    next_num = 3 + num
     r next_num
+
+    n count = 1 
 }
 
 Fibonacci(9)
