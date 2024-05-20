@@ -109,12 +109,12 @@ statement
     ;
 
 expression
-    : Identifier # IdentifierExpression
-    | Identifier subscriptOperator? (Dot expression)? # IdentifierSubscriptExpression
+    : Identifier subscriptOperator (Dot expression)? # IdentifierSubscriptExpression
     | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression
+    | entityCall #EntityCallExpression
     | literal # LiteralExpression
     | Super # SuperExpression
-    | entityCall #EntityCallExpression
+    | Identifier # IdentifierExpression
 
     // Operators
     | PlusPlus expression # PreIncrementExpression
