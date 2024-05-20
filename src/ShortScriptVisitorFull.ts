@@ -26,8 +26,7 @@ import ReturnExpression from "./ReturnExpression";
 type FunctionValue = {
 	returnType:string,
 	args: string[][],
-	body:SourceElementContext[],
-	// return?: ExpressionContext
+	body:SourceElementContext[],	
 }
 
 export class ShortScriptVisitorFull
