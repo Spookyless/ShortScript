@@ -265,7 +265,7 @@ nLoopHead
     ;
 
 forLoopHead
-    : Loop OpenParen variableDefinition Assign expression (Range | RangeInclude) expression CloseParen
+    : Loop OpenParen variableDefinition Assign left=expression (Range | RangeInclude) right=expression CloseParen
     ;
 
 whileLoopHead

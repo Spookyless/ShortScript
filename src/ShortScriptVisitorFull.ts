@@ -13,6 +13,11 @@ import {
 	IdentifierCallExpressionContext,
 	SourceElementContext,
 	ReturnExpressionContext,
+	LoopStatementContext,
+	NLoopHeadContext,
+	ForLoopHeadContext,
+	WhileLoopHeadContext,
+	RelationalExpressionContext,
 } from "antlr/ShortScriptParser";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { ShortScriptVisitor } from "antlr/ShortScriptVisitor";
@@ -59,7 +64,7 @@ export class ShortScriptVisitorFull
 
 	visitAdditiveExpression: (ctx: AdditiveExpressionContext) => any = (ctx) => {
 		const left = this.visit(ctx._left);
-		const right = this.visit(ctx._right);
+		const right = this.visit(ctx._right);		
 
 		if (ctx.Plus()) {
 			return left + right;
@@ -67,6 +72,29 @@ export class ShortScriptVisitorFull
 
 		if (ctx.Minus()) {
 			return left - right;
+		}
+	};
+
+	visitRelationalExpression: (ctx: RelationalExpressionContext) => any = ctx =>{
+		const left = this.visit(ctx._left)
+		const right = this.visit(ctx._right)
+		const operator = ctx._op;
+		
+		// TODO Zrobić to w eleganstszy sposób
+		if(operator.text === "<"){
+			return left < right
+		}
+		else if(operator.text === "<="){
+			return left <= right
+		}
+		else if(operator.text === ">"){
+			return left > right
+		}
+		else if(operator.text === ">="){
+			return left >= right
+		}
+		else {
+			throw new LineError(ctx, "Bad operator");
 		}
 	};
 
@@ -103,9 +131,30 @@ export class ShortScriptVisitorFull
 
 	visitAssignmentExpression: (ctx: AssignmentExpressionContext) => any = (ctx) => {
 		const identifier = ctx.Identifier().text;
+		const assignment = ctx.assignment();
 		const value = this.visit(ctx.expression());
-		this.variables[identifier] = value;
-		return value;
+
+		if(assignment.Assign()){				
+			this.variables[identifier] = value;			
+		}
+		else if(assignment.MultiplyAssign()){
+			this.variables[identifier] *= value
+		}
+		else if(assignment.DivideAssign()){
+			this.variables[identifier] /= value
+		}
+		else if(assignment.ModulusAssign()){
+			this.variables[identifier] %= value
+		}
+		else if(assignment.PlusAssign()){
+			this.variables[identifier] += value
+		}
+		else if(assignment.MinusAssign()){
+			this.variables[identifier] -= value
+		}
+
+		
+		return this.variables[identifier];
 	};
 
 	visitIdentifierExpression: (ctx: IdentifierExpressionContext) => any = (ctx) => {
@@ -161,13 +210,10 @@ export class ShortScriptVisitorFull
 		};		
 		
 		return null;
-	}
-
-	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx =>{
-		return new ReturnExpression(ctx.expression());		
-	}
+	}	
 
 	visitIdentifierCallExpression(ctx: IdentifierCallExpressionContext): any {
+		// TODO Sprawdzanie zwracanych typów
 		const identifier = ctx.Identifier().text;
 		const args = ctx.expression() ? ctx.expression().map((exp: ExpressionContext) => this.visit(exp)) : [];
 
@@ -202,6 +248,59 @@ export class ShortScriptVisitorFull
 			throw new LineError(ctx, `Function ${identifier} is not defined`);
 		}
 	}
+
+	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx =>{
+		return new ReturnExpression(ctx.expression());		
+	}
+
+	visitLoopStatement: (ctx: LoopStatementContext) => any = ctx => {
+		const head = ctx.loopHead()
+		const body = ctx.loopBody()
+		const body_statements = body.sourceElement();
+
+		let loopHead;
+
+		if((loopHead = head.nLoopHead())){
+			throw new LineError(ctx, 'Not implemented');
+		}
+		else if((loopHead = head.forLoopHead())){
+			const forVar = loopHead.variableDefinition().Identifier().text;
+			const leftExpr = this.visit(loopHead._left);
+			const rightExpr = this.visit(loopHead._right);									
+
+			if (typeof leftExpr !== 'number') {
+				throw new LineError(ctx, 'Left expression must be a number');
+			}
+
+			if (typeof rightExpr !== 'number') {
+				throw new LineError(ctx, 'Right expression must be a number');
+			}
+
+			const endOfLoop = loopHead.Range() ? rightExpr : rightExpr + 1
+
+			this.variables[forVar] = leftExpr
+			
+			while (this.variables[forVar] < endOfLoop) {		
+				for (const statement of body_statements) {
+					this.visit(statement)
+				}
+
+				this.variables[forVar]++;
+			}
+		}
+		else if((loopHead = head.whileLoopHead())){
+			let expr = this.visit(loopHead.expression())
+			
+
+			while(expr){				
+				for (const statement of body_statements) {
+					this.visit(statement)
+				}
+
+				expr = this.visit(loopHead.expression())
+			}
+		}
+	};
 
 	visitTerminal(node: TerminalNode) {
 		return node.text;
