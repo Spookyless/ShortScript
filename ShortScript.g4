@@ -109,11 +109,12 @@ statement
     ;
 
 expression
-    : Identifier # IdentifierExpression
-    | Identifier subscriptOperator? (Dot expression)? # IdentifierSubscriptExpression
+    : Identifier subscriptOperator (Dot expression)? # IdentifierSubscriptExpression
+    | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression
+    | entityCall #EntityCallExpression
     | literal # LiteralExpression
     | Super # SuperExpression
-    | entityCall #EntityCallExpression
+    | Identifier # IdentifierExpression
 
     // Operators
     | PlusPlus expression # PreIncrementExpression
@@ -135,6 +136,7 @@ expression
     | variableDefinition assignment expression # VariableDefinitionWithAssignmentExpression
     | variableDefinition # VariableDefinitionExpression
     | OpenParen expression CloseParen # GroupExpression
+    | Return expression? # ReturnExpression
     ;
 
 
@@ -263,7 +265,7 @@ nLoopHead
     ;
 
 forLoopHead
-    : Loop OpenParen variableDefinition Assign expression (Range | RangeInclude) expression CloseParen
+    : Loop OpenParen variableDefinition Assign left=expression (Range | RangeInclude) right=expression CloseParen
     ;
 
 whileLoopHead
@@ -289,11 +291,9 @@ functionDefinition
         (variableDefinition (Comma variableDefinition)*)? 
     CloseParen 
     OpenBrace 
-        sourceElement*
-        (Return expression?)?
+        sourceElement*        
     CloseBrace
 ;
-
 
 // ========== Classes ==========
 
