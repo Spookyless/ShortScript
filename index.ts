@@ -23,7 +23,7 @@ n f Fibonacci(n num){
   }
   
   
-  Fibonacci(8)
+  Fibonacci(6)
 `;
 const inputStream = CharStreams.fromString(input);
 const lexer = new ShortScriptLexer(inputStream);

@@ -1,0 +1,13 @@
+[M] - Pętla bez iteratora
+[M]- if e eif
+[F] - context
+[M] - br
+[M] - co
+- log() ??????
+[K] - klasy
+  - wywołanie konstruktora
+  - działanie pól i metod
+  - ???
+- array 
+  - wstępnie bez możliwość dodawania 
+- zabezpieczyć funckcję przed błędami (zły typ zwracany, jak się wywołuje funkcję [ niceFunction() ] to sprawdzić, czy to na pewno funkcja, a nie zmienna)
