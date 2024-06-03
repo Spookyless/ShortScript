@@ -1,37 +1,46 @@
 import {
 	AdditiveExpressionContext,
 	AssignmentExpressionContext,
+	ClassDefinitionContext,
+	ClassExpressionContext,
+	ConstructorDefinitionContext,
+	ExpressionContext,
+	FunctionDefinitionContext,
+	IdentifierCallExpressionContext,
 	IdentifierExpressionContext,
 	LiteralContext,
+	LoopStatementContext,
+	MethodDefinitionContext,
 	MultiplicativeExpressionContext,
 	PowerExpressionContext,
-	VariableDefinitionWithAssignmentExpressionContext,
-	VariableDefinitionExpressionContext,
-	FunctionDefinitionContext,
-	VariableDefinitionContext,
-	ExpressionContext,
-	IdentifierCallExpressionContext,
-	SourceElementContext,
-	ReturnExpressionContext,
-	LoopStatementContext,
-	NLoopHeadContext,
-	ForLoopHeadContext,
-	WhileLoopHeadContext,
 	RelationalExpressionContext,
+	ReturnExpressionContext,
+	SourceElementContext,
+	VariableDefinitionContext,
+	VariableDefinitionExpressionContext,
+	VariableDefinitionWithAssignmentExpressionContext,
 } from "antlr/ShortScriptParser";
-import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { ShortScriptVisitor } from "antlr/ShortScriptVisitor";
-import { ErrorNode } from "antlr4ts/tree/ErrorNode";
-import { RuleNode } from "antlr4ts/tree/RuleNode";
-import { ParseTree } from "antlr4ts/tree/ParseTree";
-import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
-import { LineError } from "./LineError";
+import {TerminalNode} from "antlr4ts/tree/TerminalNode";
+import {ShortScriptVisitor} from "antlr/ShortScriptVisitor";
+import {ErrorNode} from "antlr4ts/tree/ErrorNode";
+import {RuleNode} from "antlr4ts/tree/RuleNode";
+import {ParseTree} from "antlr4ts/tree/ParseTree";
+import {AbstractParseTreeVisitor} from "antlr4ts/tree/AbstractParseTreeVisitor";
+import {LineError} from "./LineError";
 import ReturnExpression from "./ReturnExpression";
 
 type FunctionValue = {
 	returnType:string,
 	args: string[][],
-	body:SourceElementContext[],	
+	body: SourceElementContext[],
+}
+
+type Class = {
+	name: string,
+	superclass?: Class,
+	constructor?: FunctionValue,
+	fields: { [key: string]: any },
+	methods: { [key: string]: FunctionValue }
 }
 
 export class ShortScriptVisitorFull
@@ -301,6 +310,71 @@ export class ShortScriptVisitorFull
 			}
 		}
 	};
+
+	visitClassDefinition(ctx: ClassDefinitionContext): any {
+		const className = ctx.Identifier()[0].text;
+
+		// Create a new class object
+		this.variables[className] = {
+			name: className,
+			fields: {},
+			methods: {}
+		};
+
+		// Check if the class has a superclass
+		if (ctx.InheritArrow()) {
+			const superclassName = ctx.Identifier()[1].text;
+			if (!this.variables.hasOwnProperty(superclassName)) {
+				throw new LineError(ctx, `Superclass ${superclassName} is not defined`);
+			}
+			this.variables[className].superclass = this.variables[superclassName];
+		}
+
+		// Visit each class member
+		// if (ctx.children) {
+		// 	for (const member of ctx.children.slice(3, -1)) {
+		// 		this.visit(member);
+		// 	}
+		// }
+
+		return null;
+	}
+
+	// visitConstructorDefinition(ctx: ConstructorDefinitionContext): any {
+	// 	const className = ctx.Identifier()[0].text;
+	//
+	// 	if (!this.variables.hasOwnProperty(className)) {
+	// 		throw new LineError(ctx, `Class ${className} is not defined`);
+	// 	}
+	//
+	// 	(this.variables[className] as Class).constructor = {
+	// 		returnType: className,
+	// 		args: ctx.variableDefinition().map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]),
+	// 		body: ctx.classExpression().map((exprCtx) => this.visit(exprCtx)),
+	// 	};
+	//
+	// 	return null;
+	// }
+	//
+	// visitMethodDefinition(ctx: MethodDefinitionContext): any {
+	// 	if (!this.currentClass) {
+	// 		throw new Error("Method definition outside of class definition");
+	// 	}
+	//
+	// 	const methodName = ctx.Identifier().text;
+	//
+	// 	this.currentClass.methods[methodName] = {
+	// 		returnType: ctx.type().text,
+	// 		args: ctx.variableDefinition().map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]),
+	// 		body: ctx.classExpression().map((exprCtx) => this.visit(exprCtx))
+	// 	};
+	//
+	// 	return null;
+	// }
+
+	visitClassExpression(ctx: ClassExpressionContext): any {
+		// TODO: Implement class expression handling
+	}
 
 	visitTerminal(node: TerminalNode) {
 		return node.text;

@@ -300,6 +300,33 @@ functionDefinition
 classDefinition
     : Class Identifier (InheritArrow Identifier)?
         OpenBrace
-            (variableDefinition | functionDefinition)*
+            (variableDefinition | methodDefinition)*
+            constructorDefinition?
+            (variableDefinition | methodDefinition)*
         CloseBrace
     ;
+
+constructorDefinition
+    : Identifier Identifier (LongArrow | (Assign variableDefinition (Comma variableDefinition)* Arrow))
+        OpenBrace
+            (Super OpenParen (expression (Comma expression)*)? CloseParen)?
+            (statement | classExpression)*
+        CloseBrace
+    ;
+
+methodDefinition
+    : type Function Identifier
+        OpenParen
+            (variableDefinition (Comma variableDefinition)*)?
+        CloseParen
+        OpenBrace
+            (statement | classExpression)*
+        CloseBrace
+    ;
+
+classExpression
+    : expression # NormalExpression
+    | This (Dot expression)? # ThisExpression
+    | Super Dot expression # SuperDotExpression
+    ;
+
