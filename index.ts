@@ -6,13 +6,23 @@ import { ShortScriptVisitorFull } from "src/ShortScriptVisitorFull";
 import { LineError } from "src/LineError";
 
 const input = `
-n num1 = 0
+n num1 = 6
+n num2 = 1
 
-l(-9){
-    num1+=1
+if(num1 == 0){
+    num2 = 0
+}
+e if(num1 == 1){
+    num2 = 1
+}
+e if(num1 == 2){
+    num2 = 2
+}
+e {
+    num2 = 3
 }
 
-num1
+num2
 `;
 
 const inputStream = CharStreams.fromString(input);

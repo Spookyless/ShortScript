@@ -142,10 +142,19 @@ expression
 
 // ========== If / ElseIf / Else ==========
 conditional
-    : If conditionalHead conditionalBody
-      (Else If conditionalHead conditionalBody)*
-      (Else conditionalBody)?
+    : ifConditional
+      (eifConditional)*
+      (eConditional)?
     ;
+
+ifConditional
+    : If conditionalHead conditionalBody;
+
+eifConditional
+    : Else If conditionalHead conditionalBody;
+
+eConditional
+    : Else conditionalBody;
 
 conditionalHead
     : OpenParen expression CloseParen
