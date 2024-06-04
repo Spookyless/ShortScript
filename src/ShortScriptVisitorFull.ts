@@ -9,13 +9,13 @@ import {
 	IdentifierCallExpressionContext,
 	IdentifierExpressionContext,
 	LiteralContext,
-	LoopStatementContext,
+	LoopStatementContext, MethodBodyElementContext,
 	MethodDefinitionContext,
 	MultiplicativeExpressionContext,
 	PowerExpressionContext,
 	RelationalExpressionContext,
 	ReturnExpressionContext,
-	SourceElementContext,
+	SourceElementContext, SuperDotExpressionContext, ThisExpressionContext,
 	VariableDefinitionContext,
 	VariableDefinitionExpressionContext,
 	VariableDefinitionWithAssignmentExpressionContext,
@@ -29,18 +29,42 @@ import {AbstractParseTreeVisitor} from "antlr4ts/tree/AbstractParseTreeVisitor";
 import {LineError} from "./LineError";
 import ReturnExpression from "./ReturnExpression";
 
-type FunctionValue = {
-	returnType:string,
-	args: string[][],
-	body: SourceElementContext[],
+
+
+class FunctionValue {
+	returnType: string;
+	args: string[][];
+	body: SourceElementContext[];
+
+	constructor(returnType: string, args: string[][], body: SourceElementContext[]) {
+		this.returnType = returnType;
+		this.args = args;
+		this.body = body;
+	}
 }
 
-type Class = {
-	name: string,
-	superclass?: Class,
-	constructor?: FunctionValue,
-	fields: { [key: string]: any },
-	methods: { [key: string]: FunctionValue }
+class Method {
+	returnType: string;
+	args: string[][];
+	body: MethodBodyElementContext[];
+
+	constructor(returnType: string, args: string[][], body: MethodBodyElementContext[]) {
+		this.returnType = returnType;
+		this.args = args;
+		this.body = body;
+	}
+}
+
+class Class {
+	name: string;
+	superclass?: Class;
+	_constructor?: Method;
+	fields: { [key: string]: any } = {};
+	methods: { [key: string]: Method } = {};
+
+	constructor(name: string) {
+		this.name = name;
+	}
 }
 
 export class ShortScriptVisitorFull
@@ -212,12 +236,12 @@ export class ShortScriptVisitorFull
 		if (functionArgs) {
 			args = functionArgs.map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]);
 		}
-		this.variables[identifier] = {
+		this.variables[identifier] = new FunctionValue(
 			returnType,
 			args,
-			body: functionBody,		
-		};		
-		
+			functionBody,
+		);
+
 		return null;
 	}	
 
@@ -226,10 +250,12 @@ export class ShortScriptVisitorFull
 		const identifier = ctx.Identifier().text;
 		const args = ctx.expression() ? ctx.expression().map((exp: ExpressionContext) => this.visit(exp)) : [];
 
-		console.log(args)
-		
-		if (this.variables.hasOwnProperty(identifier)) { // TODO: check if this.variables[identifier] is a function			
-			const funcVar = this.variables[identifier] as FunctionValue			
+		if (!this.variables.hasOwnProperty(identifier)) {
+			throw new LineError(ctx, `Function ${identifier} is not defined`);
+		}
+
+		if (this.variables[identifier] instanceof FunctionValue) {
+			const funcVar = this.variables[identifier] as FunctionValue
 			const tempVars = funcVar.args.map(el => [el[1], this.variables[el[1]]])
 
 			funcVar.args.forEach((el, key) =>{
@@ -253,8 +279,10 @@ export class ShortScriptVisitorFull
 			})
 			
 			return whatToReturn;
-		} else {
-			throw new LineError(ctx, `Function ${identifier} is not defined`);
+		} else if (this.variables[identifier] instanceof Class) {
+			// TODO after adding context
+			//  call method but it's wrong because this line is unreachable
+			//  when methods are in class and not in this.variables
 		}
 	}
 
@@ -315,11 +343,7 @@ export class ShortScriptVisitorFull
 		const className = ctx.Identifier()[0].text;
 
 		// Create a new class object
-		this.variables[className] = {
-			name: className,
-			fields: {},
-			methods: {}
-		};
+		this.variables[className] = new Class(className);
 
 		// Check if the class has a superclass
 		if (ctx.InheritArrow()) {
@@ -330,50 +354,43 @@ export class ShortScriptVisitorFull
 			this.variables[className].superclass = this.variables[superclassName];
 		}
 
-		// Visit each class member
-		// if (ctx.children) {
-		// 	for (const member of ctx.children.slice(3, -1)) {
-		// 		this.visit(member);
-		// 	}
-		// }
+		const constructor = ctx.constructorDefinition()
+		if (constructor) {
+			(this.variables[className] as Class)._constructor = new Method(
+				className,
+				constructor.variableDefinition().map(arg => [arg.type().text, arg.Identifier().text]),
+				constructor.methodBodyElement()
+			);
+		}
+
+		for (const field of ctx.variableDefinitionInitialization()) {
+			const fieldName = field.variableDefinition().Identifier().text;
+			if (field.assignment()) {
+				this.variables[className].fields[fieldName] = this.visit(field.expression()!)
+			} else {
+				this.variables[className].fields[fieldName] = null;
+			}
+		}
+
+		for (const method of ctx.methodDefinition()) {
+			const methodName = method.Identifier().text;
+
+			this.variables[className].methods[methodName] = new Method(
+				method.type().text,
+				method.variableDefinition().map(arg => [arg.type().text, arg.Identifier().text]),
+				method.methodBodyElement()
+			);
+		}
 
 		return null;
 	}
 
-	// visitConstructorDefinition(ctx: ConstructorDefinitionContext): any {
-	// 	const className = ctx.Identifier()[0].text;
-	//
-	// 	if (!this.variables.hasOwnProperty(className)) {
-	// 		throw new LineError(ctx, `Class ${className} is not defined`);
-	// 	}
-	//
-	// 	(this.variables[className] as Class).constructor = {
-	// 		returnType: className,
-	// 		args: ctx.variableDefinition().map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]),
-	// 		body: ctx.classExpression().map((exprCtx) => this.visit(exprCtx)),
-	// 	};
-	//
-	// 	return null;
-	// }
-	//
-	// visitMethodDefinition(ctx: MethodDefinitionContext): any {
-	// 	if (!this.currentClass) {
-	// 		throw new Error("Method definition outside of class definition");
-	// 	}
-	//
-	// 	const methodName = ctx.Identifier().text;
-	//
-	// 	this.currentClass.methods[methodName] = {
-	// 		returnType: ctx.type().text,
-	// 		args: ctx.variableDefinition().map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]),
-	// 		body: ctx.classExpression().map((exprCtx) => this.visit(exprCtx))
-	// 	};
-	//
-	// 	return null;
-	// }
+	visitThisExpression(ctx: ThisExpressionContext): any {
+		// TODO requires context to access current class
+	}
 
-	visitClassExpression(ctx: ClassExpressionContext): any {
-		// TODO: Implement class expression handling
+	visitSuperDotExpression(ctx: SuperDotExpressionContext): any {
+		// TODO requires context to access current class
 	}
 
 	visitTerminal(node: TerminalNode) {
