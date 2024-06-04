@@ -261,7 +261,7 @@ loopBody
     ;
 
 nLoopHead
-    : Loop OpenParen expression CloseParen 
+    : Loop OpenParen expr=expression CloseParen 
     ;
 
 forLoopHead
