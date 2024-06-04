@@ -18,6 +18,10 @@ import {
 	ForLoopHeadContext,
 	WhileLoopHeadContext,
 	RelationalExpressionContext,
+	ConditionalContext,
+	IfConditionalContext,
+	EifConditionalContext,
+	EqualityExpressionContext,
 } from "antlr/ShortScriptParser";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { ShortScriptVisitor } from "antlr/ShortScriptVisitor";
@@ -95,6 +99,19 @@ export class ShortScriptVisitorFull
 		}
 		else {
 			throw new LineError(ctx, "Bad operator");
+		}
+	};
+
+	visitEqualityExpression:(ctx: EqualityExpressionContext) => any = ctx => {
+		const left = this.visit(ctx._left);
+		const right = this.visit(ctx._right);
+		const operator = ctx._op;
+
+		if(operator.text === "=="){
+			return left == right;
+		}
+		else if(operator.text === "!="){
+			return left != right;
 		}
 	};
 
@@ -314,7 +331,36 @@ export class ShortScriptVisitorFull
 				expr = this.visit(loopHead.expression())
 			}
 		}
-	};
+	}
+
+	visitConditional: (ctx: ConditionalContext) => any = ctx =>{		
+		const visitConditionalBlock = (conditionalBlock: IfConditionalContext | EifConditionalContext) => {
+			const head = conditionalBlock.conditionalHead();
+			const expr = head.expression();
+			const body = conditionalBlock.conditionalBody();
+			const statements = body.sourceElement();						
+ 
+			if (this.visit(expr)) {				
+				 statements.forEach(el => this.visit(el));
+				 return true;
+			}
+			return false;
+	  }
+ 
+	  if (visitConditionalBlock(ctx.ifConditional())) return;
+ 
+	  const eifConditionals = ctx.eifConditional();
+	  for (const el of eifConditionals) {
+			if (visitConditionalBlock(el)) return;
+	  }
+ 
+	  const eConditional = ctx.eConditional();
+	  const eBody = eConditional?.conditionalBody();
+	  if (eBody) {
+			const eStatements = eBody.sourceElement();
+			eStatements.forEach(el => this.visit(el));
+	  }
+	}
 
 	visitTerminal(node: TerminalNode) {
 		return node.text;
