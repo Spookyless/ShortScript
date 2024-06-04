@@ -261,7 +261,21 @@ export class ShortScriptVisitorFull
 		let loopHead;
 
 		if((loopHead = head.nLoopHead())){
-			throw new LineError(ctx, 'Not implemented');
+			const expr = this.visit(loopHead._expr);
+
+			if (typeof expr !== 'number') {
+				throw new LineError(ctx, 'Expression must be a number');
+			}
+
+			if(expr < 0){
+				throw new LineError(ctx, "Expression is less than zero");
+			}
+
+			for (let i = 0; i < expr; i++) {
+				for (const statement of body_statements) {
+					this.visit(statement)
+				}			
+			}
 		}
 		else if((loopHead = head.forLoopHead())){
 			const forVar = loopHead.variableDefinition().Identifier().text;
