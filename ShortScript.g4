@@ -104,8 +104,8 @@ statement
     | functionDefinition
     | classDefinition
     | loopStatement
-    | Continue
-    | Break
+    | continueStatement
+    | breakStatement
     ;
 
 expression
@@ -279,6 +279,14 @@ forLoopHead
 
 whileLoopHead
     : WhileLoop OpenParen expression CloseParen
+    ;
+
+breakStatement
+    : Break
+    ;
+
+continueStatement
+    : Continue
     ;
 
 // ========== function ==========
