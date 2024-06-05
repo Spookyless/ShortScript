@@ -22,6 +22,8 @@ import {
 	IfConditionalContext,
 	EifConditionalContext,
 	EqualityExpressionContext,
+	BreakStatementContext,
+	ContinueStatementContext,
 } from "antlr/ShortScriptParser";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { ShortScriptVisitor } from "antlr/ShortScriptVisitor";
@@ -31,11 +33,13 @@ import { ParseTree } from "antlr4ts/tree/ParseTree";
 import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
 import { LineError } from "./LineError";
 import ReturnExpression from "./ReturnExpression";
+import BreakException from "./BreakException";
+import ContinueException from "./ContinueException";
 
 type FunctionValue = {
-	returnType:string,
+	returnType: string,
 	args: string[][],
-	body:SourceElementContext[],	
+	body: SourceElementContext[],
 }
 
 export class ShortScriptVisitorFull
@@ -68,7 +72,7 @@ export class ShortScriptVisitorFull
 
 	visitAdditiveExpression: (ctx: AdditiveExpressionContext) => any = (ctx) => {
 		const left = this.visit(ctx._left);
-		const right = this.visit(ctx._right);		
+		const right = this.visit(ctx._right);
 
 		if (ctx.Plus()) {
 			return left + right;
@@ -79,22 +83,22 @@ export class ShortScriptVisitorFull
 		}
 	};
 
-	visitRelationalExpression: (ctx: RelationalExpressionContext) => any = ctx =>{
+	visitRelationalExpression: (ctx: RelationalExpressionContext) => any = ctx => {
 		const left = this.visit(ctx._left)
 		const right = this.visit(ctx._right)
 		const operator = ctx._op;
-		
+
 		// TODO Zrobić to w eleganstszy sposób
-		if(operator.text === "<"){
+		if (operator.text === "<") {
 			return left < right
 		}
-		else if(operator.text === "<="){
+		else if (operator.text === "<=") {
 			return left <= right
 		}
-		else if(operator.text === ">"){
+		else if (operator.text === ">") {
 			return left > right
 		}
-		else if(operator.text === ">="){
+		else if (operator.text === ">=") {
 			return left >= right
 		}
 		else {
@@ -102,15 +106,15 @@ export class ShortScriptVisitorFull
 		}
 	};
 
-	visitEqualityExpression:(ctx: EqualityExpressionContext) => any = ctx => {
+	visitEqualityExpression: (ctx: EqualityExpressionContext) => any = ctx => {
 		const left = this.visit(ctx._left);
 		const right = this.visit(ctx._right);
 		const operator = ctx._op;
 
-		if(operator.text === "=="){
+		if (operator.text === "==") {
 			return left == right;
 		}
-		else if(operator.text === "!="){
+		else if (operator.text === "!=") {
 			return left != right;
 		}
 	};
@@ -151,26 +155,26 @@ export class ShortScriptVisitorFull
 		const assignment = ctx.assignment();
 		const value = this.visit(ctx.expression());
 
-		if(assignment.Assign()){				
-			this.variables[identifier] = value;			
+		if (assignment.Assign()) {
+			this.variables[identifier] = value;
 		}
-		else if(assignment.MultiplyAssign()){
+		else if (assignment.MultiplyAssign()) {
 			this.variables[identifier] *= value
 		}
-		else if(assignment.DivideAssign()){
+		else if (assignment.DivideAssign()) {
 			this.variables[identifier] /= value
 		}
-		else if(assignment.ModulusAssign()){
+		else if (assignment.ModulusAssign()) {
 			this.variables[identifier] %= value
 		}
-		else if(assignment.PlusAssign()){
+		else if (assignment.PlusAssign()) {
 			this.variables[identifier] += value
 		}
-		else if(assignment.MinusAssign()){
+		else if (assignment.MinusAssign()) {
 			this.variables[identifier] -= value
 		}
 
-		
+
 		return this.variables[identifier];
 	};
 
@@ -216,18 +220,18 @@ export class ShortScriptVisitorFull
 
 		const functionArgs = ctx.variableDefinition();
 		let args: string[][] = [];
-		
+
 		if (functionArgs) {
 			args = functionArgs.map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]);
 		}
 		this.variables[identifier] = {
 			returnType,
 			args,
-			body: functionBody,		
-		};		
-		
+			body: functionBody,
+		};
+
 		return null;
-	}	
+	}
 
 	visitIdentifierCallExpression(ctx: IdentifierCallExpressionContext): any {
 		// TODO Sprawdzanie zwracanych typów
@@ -235,39 +239,39 @@ export class ShortScriptVisitorFull
 		const args = ctx.expression() ? ctx.expression().map((exp: ExpressionContext) => this.visit(exp)) : [];
 
 		console.log(args)
-		
+
 		if (this.variables.hasOwnProperty(identifier)) { // TODO: check if this.variables[identifier] is a function			
-			const funcVar = this.variables[identifier] as FunctionValue			
+			const funcVar = this.variables[identifier] as FunctionValue
 			const tempVars = funcVar.args.map(el => [el[1], this.variables[el[1]]])
 
-			funcVar.args.forEach((el, key) =>{
+			funcVar.args.forEach((el, key) => {
 				this.variables[el[1]] = args[key]
-			})			
-			
+			})
+
 			let whatToReturn = null
 
 			for (const el of funcVar.body) {
 				let aa = this.visit(el)
 
-				if(aa instanceof ReturnExpression){
-					if(aa.value)
+				if (aa instanceof ReturnExpression) {
+					if (aa.value)
 						whatToReturn = this.visit(aa.value)
 					break;
-				}						
+				}
 			}
 
 			tempVars.forEach(el => {
 				this.variables[el[0]] = el[1]
 			})
-			
+
 			return whatToReturn;
 		} else {
 			throw new LineError(ctx, `Function ${identifier} is not defined`);
 		}
 	}
 
-	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx =>{
-		return new ReturnExpression(ctx.expression());		
+	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx => {
+		return new ReturnExpression(ctx.expression());
 	}
 
 	visitLoopStatement: (ctx: LoopStatementContext) => any = ctx => {
@@ -277,27 +281,40 @@ export class ShortScriptVisitorFull
 
 		let loopHead;
 
-		if((loopHead = head.nLoopHead())){
+		if ((loopHead = head.nLoopHead())) {
 			const expr = this.visit(loopHead._expr);
 
 			if (typeof expr !== 'number') {
 				throw new LineError(ctx, 'Expression must be a number');
 			}
 
-			if(expr < 0){
+			if (expr < 0) {
 				throw new LineError(ctx, "Expression is less than zero");
 			}
 
 			for (let i = 0; i < expr; i++) {
-				for (const statement of body_statements) {
-					this.visit(statement)
-				}			
+				try {
+					for (const statement of body_statements) {
+						this.visit(statement)
+					}
+				}
+				catch (e) {
+					if (e instanceof BreakException) {
+						break;
+					}
+					else if (e instanceof ContinueException) {
+						continue;
+					}
+					else {
+						throw e;
+					}
+				}
 			}
 		}
-		else if((loopHead = head.forLoopHead())){
+		else if ((loopHead = head.forLoopHead())) {
 			const forVar = loopHead.variableDefinition().Identifier().text;
 			const leftExpr = this.visit(loopHead._left);
-			const rightExpr = this.visit(loopHead._right);									
+			const rightExpr = this.visit(loopHead._right);
 
 			if (typeof leftExpr !== 'number') {
 				throw new LineError(ctx, 'Left expression must be a number');
@@ -310,56 +327,91 @@ export class ShortScriptVisitorFull
 			const endOfLoop = loopHead.Range() ? rightExpr : rightExpr + 1
 
 			this.variables[forVar] = leftExpr
-			
-			while (this.variables[forVar] < endOfLoop) {		
-				for (const statement of body_statements) {
-					this.visit(statement)
+
+			while (this.variables[forVar] < endOfLoop) {
+				try {
+					for (const statement of body_statements) {
+						this.visit(statement)
+					}
+				}
+				catch (e) {
+					if (e instanceof BreakException) {
+						break;
+					}
+					else if (e instanceof ContinueException) {
+						this.variables[forVar]++;
+						continue;
+					}
+					else {
+						throw e;
+					}
 				}
 
 				this.variables[forVar]++;
 			}
 		}
-		else if((loopHead = head.whileLoopHead())){
+		else if ((loopHead = head.whileLoopHead())) {
 			let expr = this.visit(loopHead.expression())
-			
 
-			while(expr){				
-				for (const statement of body_statements) {
-					this.visit(statement)
+
+			while (expr) {
+				try {
+					for (const statement of body_statements) {
+						this.visit(statement)
+					}
+				}
+				catch (e) {
+					if (e instanceof BreakException) {
+						break;
+					}
+					else if (e instanceof ContinueException) {
+						expr = this.visit(loopHead.expression())
+						continue;
+					}
+					else {
+						throw e;
+					}
 				}
 
 				expr = this.visit(loopHead.expression())
 			}
 		}
 	}
+	visitBreakStatement: (ctx: BreakStatementContext) => any = ctx => {
+		throw new BreakException();
+	}
 
-	visitConditional: (ctx: ConditionalContext) => any = ctx =>{		
+	visitContinueStatement: (ctx: ContinueStatementContext) => any = ctx => {
+		throw new ContinueException();
+	}
+
+	visitConditional: (ctx: ConditionalContext) => any = ctx => {
 		const visitConditionalBlock = (conditionalBlock: IfConditionalContext | EifConditionalContext) => {
 			const head = conditionalBlock.conditionalHead();
 			const expr = head.expression();
 			const body = conditionalBlock.conditionalBody();
-			const statements = body.sourceElement();						
- 
-			if (this.visit(expr)) {				
-				 statements.forEach(el => this.visit(el));
-				 return true;
+			const statements = body.sourceElement();
+
+			if (this.visit(expr)) {
+				statements.forEach(el => this.visit(el));
+				return true;
 			}
 			return false;
-	  }
- 
-	  if (visitConditionalBlock(ctx.ifConditional())) return;
- 
-	  const eifConditionals = ctx.eifConditional();
-	  for (const el of eifConditionals) {
+		}
+
+		if (visitConditionalBlock(ctx.ifConditional())) return;
+
+		const eifConditionals = ctx.eifConditional();
+		for (const el of eifConditionals) {
 			if (visitConditionalBlock(el)) return;
-	  }
- 
-	  const eConditional = ctx.eConditional();
-	  const eBody = eConditional?.conditionalBody();
-	  if (eBody) {
+		}
+
+		const eConditional = ctx.eConditional();
+		const eBody = eConditional?.conditionalBody();
+		if (eBody) {
 			const eStatements = eBody.sourceElement();
 			eStatements.forEach(el => this.visit(el));
-	  }
+		}
 	}
 
 	visitTerminal(node: TerminalNode) {
