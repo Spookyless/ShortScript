@@ -109,8 +109,9 @@ statement
     ;
 
 expression
-    : Identifier subscriptOperator (Dot expression)? # IdentifierSubscriptExpression
-    | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression
+    : expression subscriptOperator # IdentifierSubscriptExpression
+    | expression Dot Identifier arguments? # IdentifierDotExpression
+    | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression  // TODO use arguments (required change in visitor)
     | entityCall #EntityCallExpression
     | literal # LiteralExpression
     | Super # SuperExpression
@@ -136,7 +137,11 @@ expression
     | variableDefinition assignment expression # VariableDefinitionWithAssignmentExpression
     | variableDefinition # VariableDefinitionExpression
     | OpenParen expression CloseParen # GroupExpression
-    | Return expression? # ReturnExpression
+    | Return expression? # ReturnExpression // TODO not an expression (already used in visitor)
+    ;
+
+arguments
+    : OpenParen (expression (Comma expression)*)? CloseParen
     ;
 
 
@@ -241,7 +246,7 @@ dictionaryLiteral
     ;
 
 arrayLiteral
-    : OpenBracket (expression Comma)* expression CloseBracket
+    : OpenBracket (expression Comma)* expression? CloseBracket
     ;
 
 // ========== Loops ==========

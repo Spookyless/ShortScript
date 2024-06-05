@@ -6,7 +6,7 @@ import {
 	ConstructorDefinitionContext,
 	ExpressionContext,
 	FunctionDefinitionContext,
-	IdentifierCallExpressionContext,
+	IdentifierCallExpressionContext, IdentifierDotExpressionContext,
 	IdentifierExpressionContext,
 	LiteralContext,
 	LoopStatementContext, MethodBodyElementContext,
@@ -97,7 +97,7 @@ export class ShortScriptVisitorFull
 
 	visitAdditiveExpression: (ctx: AdditiveExpressionContext) => any = (ctx) => {
 		const left = this.visit(ctx._left);
-		const right = this.visit(ctx._right);		
+		const right = this.visit(ctx._right);
 
 		if (ctx.Plus()) {
 			return left + right;
@@ -112,7 +112,7 @@ export class ShortScriptVisitorFull
 		const left = this.visit(ctx._left)
 		const right = this.visit(ctx._right)
 		const operator = ctx._op;
-		
+
 		// TODO Zrobić to w eleganstszy sposób
 		if(operator.text === "<"){
 			return left < right
@@ -167,8 +167,8 @@ export class ShortScriptVisitorFull
 		const assignment = ctx.assignment();
 		const value = this.visit(ctx.expression());
 
-		if(assignment.Assign()){				
-			this.variables[identifier] = value;			
+		if(assignment.Assign()){
+			this.variables[identifier] = value;
 		}
 		else if(assignment.MultiplyAssign()){
 			this.variables[identifier] *= value
@@ -186,7 +186,7 @@ export class ShortScriptVisitorFull
 			this.variables[identifier] -= value
 		}
 
-		
+
 		return this.variables[identifier];
 	};
 
@@ -232,7 +232,7 @@ export class ShortScriptVisitorFull
 
 		const functionArgs = ctx.variableDefinition();
 		let args: string[][] = [];
-		
+
 		if (functionArgs) {
 			args = functionArgs.map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]);
 		}
@@ -243,10 +243,16 @@ export class ShortScriptVisitorFull
 		);
 
 		return null;
-	}	
+	}
 
 	visitIdentifierCallExpression(ctx: IdentifierCallExpressionContext): any {
 		// TODO Sprawdzanie zwracanych typów
+
+		// TODO po lewej może być expression
+		// 		const a = () => {}
+		// 		const b = () => a
+		// 		b()()
+
 		const identifier = ctx.Identifier().text;
 		const args = ctx.expression() ? ctx.expression().map((exp: ExpressionContext) => this.visit(exp)) : [];
 
@@ -255,39 +261,43 @@ export class ShortScriptVisitorFull
 		}
 
 		if (this.variables[identifier] instanceof FunctionValue) {
-			const funcVar = this.variables[identifier] as FunctionValue
-			const tempVars = funcVar.args.map(el => [el[1], this.variables[el[1]]])
-
-			funcVar.args.forEach((el, key) =>{
-				this.variables[el[1]] = args[key]
-			})			
-			
-			let whatToReturn = null
-
-			for (const el of funcVar.body) {
-				let aa = this.visit(el)
-
-				if(aa instanceof ReturnExpression){
-					if(aa.value)
-						whatToReturn = this.visit(aa.value)
-					break;
-				}						
-			}
-
-			tempVars.forEach(el => {
-				this.variables[el[0]] = el[1]
-			})
-			
-			return whatToReturn;
+			return this.callFunction(this.variables[identifier], args);
 		} else if (this.variables[identifier] instanceof Class) {
-			// TODO after adding context
-			//  call method but it's wrong because this line is unreachable
-			//  when methods are in class and not in this.variables
+			const classObj = this.variables[identifier] as Class;
+			if (classObj._constructor) {
+				return this.callFunction(classObj._constructor, args);
+			}
 		}
 	}
 
+	callFunction(functionObj: FunctionValue | Method, args: any[]) {
+		const tempVars = functionObj.args.map(el => [el[1], this.variables[el[1]]])
+
+		functionObj.args.forEach((el, key) =>{
+			this.variables[el[1]] = args[key]
+		})
+
+		let whatToReturn = null
+
+		for (const el of functionObj.body) {
+			let aa = this.visit(el)
+
+			if(aa instanceof ReturnExpression){
+				if(aa.value)
+					whatToReturn = this.visit(aa.value)
+				break;
+			}
+		}
+
+		tempVars.forEach(el => {
+			this.variables[el[0]] = el[1]
+		})
+
+		return whatToReturn;
+	}
+
 	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx =>{
-		return new ReturnExpression(ctx.expression());		
+		return new ReturnExpression(ctx.expression());
 	}
 
 	visitLoopStatement: (ctx: LoopStatementContext) => any = ctx => {
@@ -303,7 +313,7 @@ export class ShortScriptVisitorFull
 		else if((loopHead = head.forLoopHead())){
 			const forVar = loopHead.variableDefinition().Identifier().text;
 			const leftExpr = this.visit(loopHead._left);
-			const rightExpr = this.visit(loopHead._right);									
+			const rightExpr = this.visit(loopHead._right);
 
 			if (typeof leftExpr !== 'number') {
 				throw new LineError(ctx, 'Left expression must be a number');
@@ -316,8 +326,8 @@ export class ShortScriptVisitorFull
 			const endOfLoop = loopHead.Range() ? rightExpr : rightExpr + 1
 
 			this.variables[forVar] = leftExpr
-			
-			while (this.variables[forVar] < endOfLoop) {		
+
+			while (this.variables[forVar] < endOfLoop) {
 				for (const statement of body_statements) {
 					this.visit(statement)
 				}
@@ -327,9 +337,9 @@ export class ShortScriptVisitorFull
 		}
 		else if((loopHead = head.whileLoopHead())){
 			let expr = this.visit(loopHead.expression())
-			
 
-			while(expr){				
+
+			while(expr){
 				for (const statement of body_statements) {
 					this.visit(statement)
 				}
@@ -383,6 +393,33 @@ export class ShortScriptVisitorFull
 		}
 
 		return null;
+	}
+
+	visitIdentifierDotExpression(ctx: IdentifierDotExpressionContext): any {
+		const classObj = this.visit(ctx.expression());
+
+		if (!(classObj instanceof Class)) {
+			throw new LineError(ctx, "Expression is not a class");
+		}
+
+		const memberOrMethodName = ctx.Identifier().text;
+
+		if (!classObj.fields.hasOwnProperty(memberOrMethodName) && !classObj.methods.hasOwnProperty(memberOrMethodName)) {
+			throw new LineError(ctx, `Member or method ${memberOrMethodName} does not exist in class`);
+		}
+		if (ctx.arguments()) {
+			const method = classObj.methods[memberOrMethodName];
+
+			if (!method) {
+				throw new LineError(ctx, `${memberOrMethodName} is not a method of class`);
+			}
+
+			const args = ctx.arguments()!.expression().map((argCtx) => this.visit(argCtx));
+
+			return this.callFunction(method, args);
+		}
+
+		return classObj.fields[memberOrMethodName];
 	}
 
 	visitThisExpression(ctx: ThisExpressionContext): any {
