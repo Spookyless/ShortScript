@@ -109,8 +109,9 @@ statement
     ;
 
 expression
-    : Identifier subscriptOperator (Dot expression)? # IdentifierSubscriptExpression
-    | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression
+    : expression subscriptOperator # IdentifierSubscriptExpression
+    | expression Dot Identifier arguments? # IdentifierDotExpression
+    | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression  // TODO use arguments (required change in visitor)
     | entityCall #EntityCallExpression
     | literal # LiteralExpression
     | Super # SuperExpression
@@ -136,7 +137,11 @@ expression
     | variableDefinition assignment expression # VariableDefinitionWithAssignmentExpression
     | variableDefinition # VariableDefinitionExpression
     | OpenParen expression CloseParen # GroupExpression
-    | Return expression? # ReturnExpression
+    | Return expression? # ReturnExpression // TODO not an expression (already used in visitor)
+    ;
+
+arguments
+    : OpenParen (expression (Comma expression)*)? CloseParen
     ;
 
 
@@ -250,7 +255,7 @@ dictionaryLiteral
     ;
 
 arrayLiteral
-    : OpenBracket (expression Comma)* expression CloseBracket
+    : OpenBracket (expression Comma)* expression? CloseBracket
     ;
 
 // ========== Loops ==========
@@ -317,6 +322,41 @@ functionDefinition
 classDefinition
     : Class Identifier (InheritArrow Identifier)?
         OpenBrace
-            (variableDefinition | functionDefinition)*
+            (variableDefinitionInitialization | methodDefinition)*
+            constructorDefinition?
+            (variableDefinitionInitialization | methodDefinition)*
         CloseBrace
     ;
+
+variableDefinitionInitialization
+    : variableDefinition (assignment expression)?
+    ;
+
+constructorDefinition
+    : Identifier Identifier (LongArrow | (Assign variableDefinition (Comma variableDefinition)* Arrow))
+        OpenBrace
+            (Super OpenParen (expression (Comma expression)*)? CloseParen)?
+            methodBodyElement*
+        CloseBrace
+    ;
+
+methodDefinition
+    : type Function Identifier
+        OpenParen
+            (variableDefinition (Comma variableDefinition)*)?
+        CloseParen
+        OpenBrace
+            methodBodyElement*
+        CloseBrace
+    ;
+
+methodBodyElement
+    : (statement | classExpression)
+    ;
+
+classExpression
+    : expression # NormalExpression
+    | This (Dot expression)? # ThisExpression
+    | Super Dot expression # SuperDotExpression
+    ;
+

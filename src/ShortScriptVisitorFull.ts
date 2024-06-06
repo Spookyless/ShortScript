@@ -1,10 +1,23 @@
 import {
 	AdditiveExpressionContext,
 	AssignmentExpressionContext,
+	ClassDefinitionContext,
+	ClassExpressionContext,
+	ConstructorDefinitionContext,
+	ExpressionContext,
+	FunctionDefinitionContext,
+	IdentifierCallExpressionContext, IdentifierDotExpressionContext,
 	IdentifierExpressionContext,
 	LiteralContext,
+	LoopStatementContext, MethodBodyElementContext,
+	MethodDefinitionContext,
 	MultiplicativeExpressionContext,
 	PowerExpressionContext,
+	RelationalExpressionContext,
+	ReturnExpressionContext,
+	SourceElementContext, SuperDotExpressionContext, ThisExpressionContext,
+	VariableDefinitionContext,
+	VariableDefinitionExpressionContext,
 	VariableDefinitionWithAssignmentExpressionContext,
 	VariableDefinitionExpressionContext,
 	FunctionDefinitionContext,
@@ -25,21 +38,53 @@ import {
 	BreakStatementContext,
 	ContinueStatementContext,
 } from "antlr/ShortScriptParser";
-import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { ShortScriptVisitor } from "antlr/ShortScriptVisitor";
-import { ErrorNode } from "antlr4ts/tree/ErrorNode";
-import { RuleNode } from "antlr4ts/tree/RuleNode";
-import { ParseTree } from "antlr4ts/tree/ParseTree";
-import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
-import { LineError } from "./LineError";
+import {TerminalNode} from "antlr4ts/tree/TerminalNode";
+import {ShortScriptVisitor} from "antlr/ShortScriptVisitor";
+import {ErrorNode} from "antlr4ts/tree/ErrorNode";
+import {RuleNode} from "antlr4ts/tree/RuleNode";
+import {ParseTree} from "antlr4ts/tree/ParseTree";
+import {AbstractParseTreeVisitor} from "antlr4ts/tree/AbstractParseTreeVisitor";
+import {LineError} from "./LineError";
 import ReturnExpression from "./ReturnExpression";
 import BreakException from "./BreakException";
 import ContinueException from "./ContinueException";
 
-type FunctionValue = {
-	returnType: string,
-	args: string[][],
-	body: SourceElementContext[],
+
+
+class FunctionValue {
+	returnType: string;
+	args: string[][];
+	body: SourceElementContext[];
+
+	constructor(returnType: string, args: string[][], body: SourceElementContext[]) {
+		this.returnType = returnType;
+		this.args = args;
+		this.body = body;
+	}
+}
+
+class Method {
+	returnType: string;
+	args: string[][];
+	body: MethodBodyElementContext[];
+
+	constructor(returnType: string, args: string[][], body: MethodBodyElementContext[]) {
+		this.returnType = returnType;
+		this.args = args;
+		this.body = body;
+	}
+}
+
+class Class {
+	name: string;
+	superclass?: Class;
+	_constructor?: Method;
+	fields: { [key: string]: any } = {};
+	methods: { [key: string]: Method } = {};
+
+	constructor(name: string) {
+		this.name = name;
+	}
 }
 
 export class ShortScriptVisitorFull
@@ -224,53 +269,67 @@ export class ShortScriptVisitorFull
 		if (functionArgs) {
 			args = functionArgs.map((arg: VariableDefinitionContext) => [arg.type().text, arg.Identifier().text]);
 		}
-		this.variables[identifier] = {
+		this.variables[identifier] = new FunctionValue(
 			returnType,
 			args,
-			body: functionBody,
-		};
+			functionBody,
+		);
 
 		return null;
 	}
 
 	visitIdentifierCallExpression(ctx: IdentifierCallExpressionContext): any {
 		// TODO Sprawdzanie zwracanych typów
+
+		// TODO po lewej może być expression
+		// 		const a = () => {}
+		// 		const b = () => a
+		// 		b()()
+
 		const identifier = ctx.Identifier().text;
 		const args = ctx.expression() ? ctx.expression().map((exp: ExpressionContext) => this.visit(exp)) : [];
 
-		console.log(args)
-
-		if (this.variables.hasOwnProperty(identifier)) { // TODO: check if this.variables[identifier] is a function			
-			const funcVar = this.variables[identifier] as FunctionValue
-			const tempVars = funcVar.args.map(el => [el[1], this.variables[el[1]]])
-
-			funcVar.args.forEach((el, key) => {
-				this.variables[el[1]] = args[key]
-			})
-
-			let whatToReturn = null
-
-			for (const el of funcVar.body) {
-				let aa = this.visit(el)
-
-				if (aa instanceof ReturnExpression) {
-					if (aa.value)
-						whatToReturn = this.visit(aa.value)
-					break;
-				}
-			}
-
-			tempVars.forEach(el => {
-				this.variables[el[0]] = el[1]
-			})
-
-			return whatToReturn;
-		} else {
+		if (!this.variables.hasOwnProperty(identifier)) {
 			throw new LineError(ctx, `Function ${identifier} is not defined`);
+		}
+
+		if (this.variables[identifier] instanceof FunctionValue) {
+			return this.callFunction(this.variables[identifier], args);
+		} else if (this.variables[identifier] instanceof Class) {
+			const classObj = this.variables[identifier] as Class;
+			if (classObj._constructor) {
+				return this.callFunction(classObj._constructor, args);
+			}
 		}
 	}
 
-	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx => {
+	callFunction(functionObj: FunctionValue | Method, args: any[]) {
+		const tempVars = functionObj.args.map(el => [el[1], this.variables[el[1]]])
+
+		functionObj.args.forEach((el, key) =>{
+			this.variables[el[1]] = args[key]
+		})
+
+		let whatToReturn = null
+
+		for (const el of functionObj.body) {
+			let aa = this.visit(el)
+
+			if(aa instanceof ReturnExpression){
+				if(aa.value)
+					whatToReturn = this.visit(aa.value)
+				break;
+			}
+		}
+
+		tempVars.forEach(el => {
+			this.variables[el[0]] = el[1]
+		})
+
+		return whatToReturn;
+	}
+
+	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx =>{
 		return new ReturnExpression(ctx.expression());
 	}
 
@@ -379,6 +438,87 @@ export class ShortScriptVisitorFull
 	}
 	visitBreakStatement: (ctx: BreakStatementContext) => any = ctx => {
 		throw new BreakException();
+	}
+
+	visitClassDefinition(ctx: ClassDefinitionContext): any {
+		const className = ctx.Identifier()[0].text;
+
+		// Create a new class object
+		this.variables[className] = new Class(className);
+
+		// Check if the class has a superclass
+		if (ctx.InheritArrow()) {
+			const superclassName = ctx.Identifier()[1].text;
+			if (!this.variables.hasOwnProperty(superclassName)) {
+				throw new LineError(ctx, `Superclass ${superclassName} is not defined`);
+			}
+			this.variables[className].superclass = this.variables[superclassName];
+		}
+
+		const constructor = ctx.constructorDefinition()
+		if (constructor) {
+			(this.variables[className] as Class)._constructor = new Method(
+				className,
+				constructor.variableDefinition().map(arg => [arg.type().text, arg.Identifier().text]),
+				constructor.methodBodyElement()
+			);
+		}
+
+		for (const field of ctx.variableDefinitionInitialization()) {
+			const fieldName = field.variableDefinition().Identifier().text;
+			if (field.assignment()) {
+				this.variables[className].fields[fieldName] = this.visit(field.expression()!)
+			} else {
+				this.variables[className].fields[fieldName] = null;
+			}
+		}
+
+		for (const method of ctx.methodDefinition()) {
+			const methodName = method.Identifier().text;
+
+			this.variables[className].methods[methodName] = new Method(
+				method.type().text,
+				method.variableDefinition().map(arg => [arg.type().text, arg.Identifier().text]),
+				method.methodBodyElement()
+			);
+		}
+
+		return null;
+	}
+
+	visitIdentifierDotExpression(ctx: IdentifierDotExpressionContext): any {
+		const classObj = this.visit(ctx.expression());
+
+		if (!(classObj instanceof Class)) {
+			throw new LineError(ctx, "Expression is not a class");
+		}
+
+		const memberOrMethodName = ctx.Identifier().text;
+
+		if (!classObj.fields.hasOwnProperty(memberOrMethodName) && !classObj.methods.hasOwnProperty(memberOrMethodName)) {
+			throw new LineError(ctx, `Member or method ${memberOrMethodName} does not exist in class`);
+		}
+		if (ctx.arguments()) {
+			const method = classObj.methods[memberOrMethodName];
+
+			if (!method) {
+				throw new LineError(ctx, `${memberOrMethodName} is not a method of class`);
+			}
+
+			const args = ctx.arguments()!.expression().map((argCtx) => this.visit(argCtx));
+
+			return this.callFunction(method, args);
+		}
+
+		return classObj.fields[memberOrMethodName];
+	}
+
+	visitThisExpression(ctx: ThisExpressionContext): any {
+		// TODO requires context to access current class
+	}
+
+	visitSuperDotExpression(ctx: SuperDotExpressionContext): any {
+		// TODO requires context to access current class
 	}
 
 	visitContinueStatement: (ctx: ContinueStatementContext) => any = ctx => {
