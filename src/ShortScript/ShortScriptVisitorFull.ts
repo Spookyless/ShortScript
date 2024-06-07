@@ -2,52 +2,41 @@ import {
 	AdditiveExpressionContext,
 	AssignmentExpressionContext,
 	ClassDefinitionContext,
-	ClassExpressionContext,
-	ConstructorDefinitionContext,
 	ExpressionContext,
 	FunctionDefinitionContext,
 	IdentifierCallExpressionContext, IdentifierDotExpressionContext,
 	IdentifierExpressionContext,
 	LiteralContext,
-	LoopStatementContext, MethodBodyElementContext,
-	MethodDefinitionContext,
+	LoopStatementContext,
+	MethodBodyElementContext,
 	MultiplicativeExpressionContext,
 	PowerExpressionContext,
 	RelationalExpressionContext,
 	ReturnExpressionContext,
-	SourceElementContext, SuperDotExpressionContext, ThisExpressionContext,
+	SourceElementContext,
+	SuperDotExpressionContext,
+	ThisExpressionContext,
 	VariableDefinitionContext,
 	VariableDefinitionExpressionContext,
 	VariableDefinitionWithAssignmentExpressionContext,
-	VariableDefinitionExpressionContext,
-	FunctionDefinitionContext,
-	VariableDefinitionContext,
-	ExpressionContext,
-	IdentifierCallExpressionContext,
-	SourceElementContext,
-	ReturnExpressionContext,
-	LoopStatementContext,
-	NLoopHeadContext,
-	ForLoopHeadContext,
-	WhileLoopHeadContext,
-	RelationalExpressionContext,
 	ConditionalContext,
 	IfConditionalContext,
 	EifConditionalContext,
 	EqualityExpressionContext,
 	BreakStatementContext,
 	ContinueStatementContext,
-} from "antlr/ShortScriptParser";
+} from "./antlr/ShortScriptParser";
+
 import {TerminalNode} from "antlr4ts/tree/TerminalNode";
-import {ShortScriptVisitor} from "antlr/ShortScriptVisitor";
+import {ShortScriptVisitor} from "./antlr/ShortScriptVisitor";
 import {ErrorNode} from "antlr4ts/tree/ErrorNode";
 import {RuleNode} from "antlr4ts/tree/RuleNode";
 import {ParseTree} from "antlr4ts/tree/ParseTree";
 import {AbstractParseTreeVisitor} from "antlr4ts/tree/AbstractParseTreeVisitor";
 import {LineError} from "./LineError";
-import ReturnExpression from "./ReturnExpression";
 import BreakException from "./BreakException";
 import ContinueException from "./ContinueException";
+import ReturnException from "./ReturnException";
 
 
 
@@ -303,7 +292,7 @@ export class ShortScriptVisitorFull
 		}
 	}
 
-	callFunction(functionObj: FunctionValue | Method, args: any[]) {
+	callFunction(functionObj: FunctionValue | Method, args: any[]) {		
 		const tempVars = functionObj.args.map(el => [el[1], this.variables[el[1]]])
 
 		functionObj.args.forEach((el, key) =>{
@@ -313,13 +302,19 @@ export class ShortScriptVisitorFull
 		let whatToReturn = null
 
 		for (const el of functionObj.body) {
-			let aa = this.visit(el)
-
-			if(aa instanceof ReturnExpression){
-				if(aa.value)
-					whatToReturn = this.visit(aa.value)
-				break;
+			try{				
+				this.visit(el)
 			}
+			catch(e){
+				if(e instanceof ReturnException){
+					if(e.value !== undefined)
+						whatToReturn = e.value;
+					break;
+				}
+				else {
+					throw e;
+				}
+			}			
 		}
 
 		tempVars.forEach(el => {
@@ -329,8 +324,13 @@ export class ShortScriptVisitorFull
 		return whatToReturn;
 	}
 
-	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx =>{
-		return new ReturnExpression(ctx.expression());
+	visitReturnExpression: (ctx: ReturnExpressionContext) => any = ctx =>{		
+		const expression = ctx.expression();
+		if(expression != undefined)
+			throw new ReturnException(this.visit(expression));
+		else{
+			throw new ReturnException(undefined);
+		}
 	}
 
 	visitLoopStatement: (ctx: LoopStatementContext) => any = ctx => {

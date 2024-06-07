@@ -1,18 +1,22 @@
 n f Fibonacci(n num){
-  n num1 = 0
-  n num2 = 1
-  n next_num = num2
-  n count = 2
-
-  w(count <= num){
-    count += 1
-    next_num = num1 + num2
-    num1 = num2
-    num2 = next_num     
+  if(num<=0){
+      r 0
+  }
+  e if(num==1){
+      r 1
   }
 
-  r next_num
+  n num1 = 0
+  n num2 = 1
+    
+  l(n i=2..=num){
+      n temp = num1
+      num1 = num2
+      num2 = temp + num2
+  }    
+
+  r num2
 }
 
 
-Fibonacci(5)
+Fibonacci(6)
