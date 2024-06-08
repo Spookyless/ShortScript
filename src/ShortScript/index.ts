@@ -61,6 +61,7 @@ export function runInterpreter(input:string){
         if (error instanceof LineError) {
             
             console.error("Error:", error.toString());
+            return [error.toString(), ""]
         } else {
             throw error;
         }

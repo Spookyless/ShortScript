@@ -41,8 +41,9 @@ function App() {
             <Textarea
               value={text}
               onChange={handleChange}
-              sx={{ height: 600 }}
+              sx={{ height: 600, whiteSpace: "nowrap" }}
               variant="soft"
+
             />
           </div>
           <Button onClick={handleSubmit}>Submit</Button>

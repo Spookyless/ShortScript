@@ -18,8 +18,7 @@
 
 textarea {
     width: 100%; 
-    height: 600px;   
-    white-space: nowrap; 
+    height: 600px;       
     overflow: auto;
 }
 button {
