@@ -83,7 +83,9 @@ If                         : 'if';
 Else                       : 'e';
 Class                      : 'c';
 This                       : 't';
-Super                      : '^'; 
+Super                      : '^';
+
+Print                      : 'print';
 
 
 Identifier: [a-zA-Z_][a-zA-Z_0-9]*;
@@ -109,7 +111,8 @@ statement
     ;
 
 expression
-    : expression subscriptOperator # IdentifierSubscriptExpression
+    : Print arguments # PrintExpression
+    | expression subscriptOperator # IdentifierSubscriptExpression
     | expression Dot Identifier arguments? # IdentifierDotExpression
     | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression  // TODO use arguments (required change in visitor)
     | entityCall #EntityCallExpression
