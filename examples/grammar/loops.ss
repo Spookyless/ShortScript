@@ -10,11 +10,12 @@ l (n i=0..4) {
   if (i == 3) {
     br
   }
+  print(i)
 }
 
 l (n i=0..=5) {
   l (n j=0..=5) {
-    i * j
+    print(i * j)
   }
 }
 
