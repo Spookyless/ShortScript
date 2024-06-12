@@ -1,71 +1,36 @@
 import { ShortScriptLexer } from "./antlr/ShortScriptLexer";
 import { ShortScriptParser } from "./antlr/ShortScriptParser";
 import { CommonTokenStream, CharStreams } from "antlr4ts";
-import { ShortScriptVisitor } from "./antlr/ShortScriptVisitor";
-import { ShortScriptVisitorFull} from "./ShortScriptVisitorFull";
-import { LineError } from "./LineError";
-import { stderr, stdout } from "process";
-import { CustomErrorListener } from "./CustomErrorListener";
+import { ShortScriptVisitorFull } from "./ShortScriptVisitorFull";
+import { LineError } from "./helpers/LineError";
+import { ErrorListener } from "./ErrorListener";
 
-const input = `
-n f Fibonacci(n num){
-    if(num<=0){
-        r 0
-    }
-    e if(num==1){
-        r 1
-    }
+type InterpretationResult = (string | LineError)[];
 
-    n num1 = 0
-    n num2 = 1
-        
-    l(num - 1){
-        n temp = num1
-        num1 = num2
-        num2 = temp + num2
-        print(num2)
-    }    
+export function runInterpreter(input: string): InterpretationResult {
+  const messages: (string | LineError)[] = [];
 
-    r num2
-}
+  const inputStream = CharStreams.fromString(input);
+  const lexer = new ShortScriptLexer(inputStream);
+  const tokenStream = new CommonTokenStream(lexer);
+  const parser = new ShortScriptParser(tokenStream);
 
-print('Wynik:')
-print(Fibonacci(7))
-`;
+  const errorListener = new ErrorListener(messages);
+  parser.removeErrorListeners();
+  parser.addErrorListener(errorListener);
 
+  const tree = parser.program();
+  const visitor: ShortScriptVisitorFull = new ShortScriptVisitorFull(messages);
 
+  try {
+    visitor.visit(tree);
 
-runInterpreter(input)
-
-export function runInterpreter(input:string){    
-    
-    const inputStream = CharStreams.fromString(input);
-    const lexer = new ShortScriptLexer(inputStream);
-    const tokenStream = new CommonTokenStream(lexer);
-    const parser = new ShortScriptParser(tokenStream);
-
-    const errorListener = new CustomErrorListener()
-    parser.removeErrorListeners();
-    parser.addErrorListener(errorListener);
-    
-    const tree = parser.program();
-    const visitor: ShortScriptVisitorFull = new ShortScriptVisitorFull();
-
-    try {        
-        const result = visitor.visit(tree)
-
-        // console.log(errorListener.messages);
-
-        return [errorListener.messages.join("\n"),  visitor.logs.join("\n")]
-    } catch (error) {
-        if (error instanceof LineError) {
-            
-            console.error("Error:", error.toString());
-            return [error.toString(), ""]
-        } else {
-            throw error;
-        }
+    return [...messages];
+  } catch (error) {
+    if (error instanceof LineError) {
+      return [...messages, error];
     }
 
-    return "";
+    throw error;
+  }
 }

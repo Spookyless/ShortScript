@@ -1,0 +1,39 @@
+:root {
+  --keyword: #bc86be;
+}
+
+.token:is(.range, .rangeinclude) {
+  color: var(--keyword);
+}
+
+.token:is(.numbertypeliteral, .booleantypeliteral, .stringtypeliteral, .voidtypeliteral) {
+  color: var(--keyword);
+}
+
+.token:is(.nullliteral, .booleanliteral) {
+  color: var(--keyword);
+}
+
+.token:is(.stringliteral) {
+  color: #c4917b;
+}
+
+.token:is(.integerliteral, .floatliteral) {
+  color: #b9ceab;
+}
+
+.token:is(.multilinecomment, .singlelinecomment) {
+  color: #74995b;
+}
+
+.token:is(.identifier) {
+  color: #abdcfb;
+}
+
+.token:is(.print) {
+  color: #d7d8a5;
+}
+
+.token:is(.break, .continue, .return, .loop, .whileloop, .function, .if, .else, .class, .this, .super) {
+  color: var(--keyword);
+}
