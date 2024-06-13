@@ -111,7 +111,8 @@ statement
     ;
 
 expression
-    : Print arguments # PrintExpression
+    : OpenParen expression CloseParen # GroupExpression
+    | Print arguments # PrintExpression
     | expression subscriptOperator # IdentifierSubscriptExpression
     | expression Dot Identifier arguments? # IdentifierDotExpression
     | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression  // TODO use arguments (required change in visitor)
@@ -139,7 +140,6 @@ expression
     | Identifier assignment expression # AssignmentExpression
     | variableDefinition assignment expression # VariableDefinitionWithAssignmentExpression
     | variableDefinition # VariableDefinitionExpression
-    | OpenParen expression CloseParen # GroupExpression
     | Return expression? # ReturnExpression // TODO not an expression (already used in visitor)
     ;
 

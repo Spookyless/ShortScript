@@ -27,6 +27,7 @@ import {
   BreakStatementContext,
   ContinueStatementContext,
   PrintExpressionContext,
+  GroupExpressionContext,
 } from "./antlr/ShortScriptParser";
 
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
@@ -163,8 +164,10 @@ export class ShortScriptVisitorFull
     const operator = ctx._op;
 
     if (operator.text === "==") {
+      // eslint-disable-next-line eqeqeq
       return left == right;
     } else if (operator.text === "!=") {
+      // eslint-disable-next-line eqeqeq
       return left != right;
     }
   };
@@ -307,13 +310,8 @@ export class ShortScriptVisitorFull
   callFunction(functionObj: FunctionValue | Method, args: any[]) {
     contextStack.pushContext(ContextType.FUNCTION);
 
-    // const tempVars = functionObj.args.map((el) => [
-    //   el[1],
-    //   contextStack.get(el[1]),
-    // ]);
-
     functionObj.args.forEach((el, key) => {
-      contextStack.set(el[1], args[key]);
+      contextStack.set(el[1], args[key], false);
     });
 
     let whatToReturn = null;
@@ -330,10 +328,6 @@ export class ShortScriptVisitorFull
         }
       }
     }
-
-    // tempVars.forEach((el) => {
-    //   contextStack.set(el[0], el[1]);
-    // });
 
     contextStack.popContext();
 
@@ -591,6 +585,10 @@ export class ShortScriptVisitorFull
       const eStatements = eBody.sourceElement();
       eStatements.forEach((el) => this.visit(el));
     }
+  };
+
+  visitGroupExpression: (ctx: GroupExpressionContext) => any = (ctx) => {
+    return this.visit(ctx.expression());
   };
 
   visit(tree: ParseTree): any {

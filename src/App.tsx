@@ -7,6 +7,7 @@ import { useDebounce } from 'use-debounce';
 import { CharStreams } from "antlr4ts";
 import { ShortScriptLexer } from './ShortScript/antlr/ShortScriptLexer';
 import { LineError } from './ShortScript/helpers/LineError';
+import { examples } from './examples';
 
 const addLineNumbers = (code: string) => code.split("\n")
   .map((line, i) => `<span class='line-number'>${i + 1}</span>${line}`)
@@ -21,6 +22,7 @@ const highlight = (code: string) => {
 
   const chars = CharStreams.fromString(highlightedCode);
   const lexer = new ShortScriptLexer(chars);
+  lexer.removeErrorListeners();
 
   const tokenList = lexer.getAllTokens();
 
@@ -46,34 +48,12 @@ const highlight = (code: string) => {
 };
 
 function App() {
-  const [text, setText] = useState(`n f Fibonacci(n num){
-  if(num<=0){
-      r 0
-  }
-  e if(num==1){
-      r 1
-  }
-
-  n num1 = 0
-  n num2 = 1
-      
-  l(num - 1){
-      n temp = num1
-      num1 = num2
-      num2 = temp + num2
-      print(num2)
-  }    
-
-  r num2
-}
-
-print('Wynik:')
-print(Fibonacci(7))
-  `);
+  const [text, setText] = useState('');
   const [code] = useDebounce(text, 1000);
   const [output, setOutput] = useState('');
   const [autoRun, setAutoRun] = useState(false);
   const [errorLines, setErrorLines] = useState<number[]>([]);
+  const [selectedExample, setSelectedExample] = useState<keyof typeof examples>(Object.keys(examples)[0] as keyof typeof examples);
 
   const interpret = (text: string) => {
     const result = runInterpreter(text);
@@ -92,6 +72,10 @@ print(Fibonacci(7))
     setOutput(interpret(code));
   }, [autoRun, code]);
 
+  useEffect(() => {
+    setText(examples[selectedExample]);
+  }, [selectedExample]);
+
   return (
     <div className="app">
       <h1>ShortScript</h1>
@@ -104,6 +88,9 @@ print(Fibonacci(7))
             className={autoRun ? "active" : ""}
             onClick={() => setAutoRun(state => !state)}
           >Auto run</button>
+          <select onChange={(e) => setSelectedExample(e.target.value as keyof typeof examples)}>
+            {Object.keys(examples).map(key => <option key={key} value={key}>{key}</option>)}
+          </select>
         </div>
         <div className='ide'>
           <div className='editor-container'>

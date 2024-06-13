@@ -2,6 +2,7 @@
 
 /.antlr
 /src/ShortScript/antlr
+/src/examples
 
 # dependencies
 /node_modules

@@ -4,6 +4,7 @@
   "description": "Custom interpreted language focused on minimal syntax",
   "directories": {
     "example": "examples",
+    "example:programs": "examples/programs",
     "test": "examples"
   },
   "type": "module",
@@ -53,8 +54,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "test:grammar": "tsx bin/runTest.js",
+    "test:grammar": "tsx bin/runTest.ts",
     "build:grammar": "antlr4ts -no-listener -visitor -o src/ShortScript/antlr ShortScript.g4",
+    "build:examples": "tsx bin/buildExamples.ts",
     "start:grammar": "tsx src/ShortScript/index.ts"
   },
   "eslintConfig": {

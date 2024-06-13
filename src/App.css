@@ -53,6 +53,7 @@ h1 {
 .editor pre,
 .editor textarea,
 .output {
+  font-variant-ligatures: none !important;
   font-size: 13px !important;
   font-family: "JetBrains Mono", monospace !important;
   font-optical-sizing: auto !important;
@@ -96,7 +97,8 @@ h1 {
   gap: 16px;
 }
 
-button {
+button,
+select {
   font-size: 16px;
   border: none;
   background-color: transparent;
@@ -106,12 +108,17 @@ button {
   cursor: pointer;
 }
 
+select option {
+  background-color: #2a2a2a;
+}
+
 button.active {
   color: #34f36e;
   border-color: #34f36e;
 }
 
-button:focus {
+button:focus,
+select:focus {
   outline: none;
 }
 
