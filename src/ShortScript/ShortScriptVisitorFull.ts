@@ -12,8 +12,7 @@ import {
   MethodBodyElementContext,
   MultiplicativeExpressionContext,
   PowerExpressionContext,
-  RelationalExpressionContext,
-  ReturnExpressionContext,
+  RelationalExpressionContext,  
   SourceElementContext,
   SuperDotExpressionContext,
   ThisExpressionContext,
@@ -28,6 +27,7 @@ import {
   ContinueStatementContext,
   PrintExpressionContext,
   GroupExpressionContext,
+  ReturnStatementContext,
 } from "./antlr/ShortScriptParser";
 
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
@@ -332,9 +332,9 @@ export class ShortScriptVisitorFull
     contextStack.popContext();
 
     return whatToReturn;
-  }
+  }  
 
-  visitReturnExpression: (ctx: ReturnExpressionContext) => any = (ctx) => {
+  visitReturnStatement: (ctx: ReturnStatementContext) => any = (ctx) => {
     const expression = ctx.expression();
     if (expression !== undefined)
       throw new ReturnException(this.visit(expression));

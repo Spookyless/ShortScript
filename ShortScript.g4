@@ -108,6 +108,7 @@ statement
     | loopStatement
     | continueStatement
     | breakStatement
+    | returnStatement
     ;
 
 expression
@@ -139,8 +140,7 @@ expression
     // Rest
     | Identifier assignment expression # AssignmentExpression
     | variableDefinition assignment expression # VariableDefinitionWithAssignmentExpression
-    | variableDefinition # VariableDefinitionExpression
-    | Return expression? # ReturnExpression // TODO not an expression (already used in visitor)
+    | variableDefinition # VariableDefinitionExpression    
     ;
 
 arguments
@@ -319,6 +319,10 @@ functionDefinition
         sourceElement*        
     CloseBrace
 ;
+
+returnStatement
+    : Return expression?
+    ;
 
 // ========== Classes ==========
 
