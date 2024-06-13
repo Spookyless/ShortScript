@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from "fs/promises";
+import { readdir, readFile, writeFile, access, mkdir } from "fs/promises";
 import { join, dirname, basename } from "path";
 import pkg from "../package.json";
 import { fileURLToPath } from "url";
@@ -26,9 +26,17 @@ for (const examplePath of examplesPaths) {
 }
 
 const builtFileContent = `export const examples = ${JSON.stringify(programs)};`;
+const outDir = join(__dirname, "..", "src/examples");
+
+try {
+
+  await access(outDir);
+} catch {
+  mkdir(outDir, { recursive: true });
+}
 
 await writeFile(
-  join(__dirname, "..", "src/examples/index.ts"),
+  join(outDir, "/index.ts"),
   builtFileContent,
   { encoding }
 );
