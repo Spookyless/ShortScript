@@ -2,7 +2,7 @@ v f fo() {
   5 + x
 }
 
-n f p(n x, n y) {
+n f bar(n x, n y) {
     r x + y
 }
 

@@ -115,7 +115,7 @@ expression
     | literal # LiteralExpression
     | (This | Identifier) (Dot Identifier)+ assignment expression # DotAssignmentExpression
     | This # ThisExpression
-    | Super # SuperExpression
+    | Super arguments # SuperExpression
     | Identifier # IdentifierExpression
 
     // Operators
