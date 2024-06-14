@@ -5,17 +5,33 @@
   grid-template-rows: 76px minmax(0, 1fr);
 }
 
-h1 {
+header {
   text-align: center;
-  font-size: 42px;
   color: #eee;
   display: block;
   margin: 0;
   width: 100%;
   background-color: #2a2a2a;
-  display: flex;
-  justify-content: center;
   align-items: center;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+}
+
+h1 {
+  margin: 0;
+  font-size: 42px;
+  grid-column: 2;
+}
+
+.github {
+  margin-left: 64px;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .github {
+    display: none;
+  }
 }
 
 .environment {

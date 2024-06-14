@@ -78,7 +78,13 @@ function App() {
 
   return (
     <div className="app">
-      <h1>ShortScript</h1>
+      <header>
+        <h1>ShortScript</h1>
+        <a
+          className="github"
+          href='https://github.com/Spookyless/ShortScript'
+        >🔗 Github repo</a>
+      </header>
       <div className='environment'>
         <div className="settings">
           <button
