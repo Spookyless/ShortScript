@@ -1,6 +1,6 @@
 {
   "name": "shortscript",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Custom interpreted language focused on minimal syntax",
   "directories": {
     "example": "examples",
