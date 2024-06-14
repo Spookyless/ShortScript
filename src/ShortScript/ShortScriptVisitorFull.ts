@@ -260,8 +260,9 @@ export class ShortScriptVisitorFull
   }
 
   callFunction(functionObj: FunctionValue | Method, args: any[], classInstance?: ClassInstance) {
-    if (classInstance) {
-      contextStack.pushClassContext(classInstance);
+    if (functionObj instanceof Method) {
+      if (!classInstance) throw new Error("If method is called, classInstance has to be provided")
+      contextStack.pushClassContext(classInstance as ClassInstance);
     } else {
       contextStack.pushContext(ContextType.FUNCTION);
     }
@@ -489,7 +490,7 @@ export class ShortScriptVisitorFull
             .expression()
             .map((argCtx) => this.visit(argCtx));
 
-        return this.callFunction(method, args);
+        return this.callFunction(method, args, classObj);
       }
 
       return classObj.fields[memberOrMethodName];

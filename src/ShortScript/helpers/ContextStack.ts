@@ -16,7 +16,7 @@ export class ContextStack {
   }
 
   public pushContext(type: ContextType): Context {
-    if(type !== ContextType.CLASS) throw new Error("Class have to be pushed with pushClassContext method")
+    if(type === ContextType.CLASS) throw new Error("Class have to be pushed with pushClassContext method")
 
     const c = new Context(type, this.top);
 

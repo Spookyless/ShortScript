@@ -117,7 +117,7 @@ expression
     | expression subscriptOperator # IdentifierSubscriptExpression
     | expression Dot Identifier arguments? # IdentifierDotExpression
     | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression  // TODO use arguments (required change in visitor)
-    | entityCall #EntityCallExpression
+//    | entityCall #EntityCallExpression
     | literal # LiteralExpression
     | (This | Identifier) (Dot Identifier)+ assignment expression # DotAssignmentExpression
     | This # ThisExpression
