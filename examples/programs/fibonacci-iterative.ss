@@ -19,4 +19,4 @@ n f fib(n num){
   r num2
 }
 
-print('Result: ' + fib(100))
+p('Result: ' + fib(100))

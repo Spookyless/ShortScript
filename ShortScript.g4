@@ -81,7 +81,7 @@ Class                      : 'c';
 This                       : 't';
 Super                      : '^';
 
-Print                      : 'print';
+Print                      : 'p';
 
 Identifier: [a-zA-Z_][a-zA-Z_0-9]*;
 

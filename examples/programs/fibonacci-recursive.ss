@@ -10,4 +10,4 @@ n f fib(n num){
   r fib(num - 1) + fib(num - 2) 
 }
   
-print('Result: ' + fib(8))
+p('Result: ' + fib(8))
