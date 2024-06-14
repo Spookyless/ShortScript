@@ -83,26 +83,29 @@ cd ShortScript
 npm install
 ```
 
-3. Build sources
-```shell
-npm run build:grammar
-npm run build:examples
-```
-
 ### Running the application
 
 4. Start the development server
 ```shell
-npm run start
+npm run dev
+```
+
+5. ...or, build the application and start the production version:
+```shell
+npm build
+npm start
 ```
 
 New tab in your default browser should open (usually on `localhost:3000`). When development server is ready, you'll have a full access to ShortScript IDE.
 
 ## Testing
 
-### Grammar
+All tests suites can be launched using a single script:
+```shell
+npm test
+```
 
-To run tests on bare grammar, use the appropriate script:
+If you want more granular control over what tests are run, you can execute specified stages (found in [`package.json`](./package.json)):
 ```shell
 npm run test:grammar
 ```

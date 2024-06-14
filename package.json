@@ -1,6 +1,6 @@
 {
   "name": "shortscript",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Custom interpreted language focused on minimal syntax",
   "directories": {
     "example": "examples",
@@ -37,6 +37,7 @@
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
     "react-simple-code-editor": "^0.13.1",
+    "serve": "14.2.3",
     "tsx": "^4.13.2",
     "typescript": "^4.9.5",
     "use-debounce": "^10.0.1",
@@ -50,17 +51,16 @@
     "nodemon": "^3.1.3"
   },
   "scripts": {
-    "start:web": "react-scripts start",
+    "start": "serve -p 8080 build",
+    "build": "npm run build:deps && npm run build:web",
+    "test": "npm run test:grammar && npm run test:web",
+    "dev": "npm run build:deps && react-scripts start",
     "build:web": "react-scripts build",
-    "test:web": "react-scripts test",
-    "eject:web": "react-scripts eject",
-    "test:grammar": "tsx bin/runTest.ts",
+    "build:deps": "npm run build:grammar && npm run build:examples",
     "build:grammar": "antlr4ts -no-listener -visitor -o src/ShortScript/antlr ShortScript.g4",
     "build:examples": "tsx bin/buildExamples.ts",
-    "start:grammar": "tsx src/ShortScript/index.ts",
-    "build": "npm run build:grammar && npm run build:examples && npm run build:web",
-    "build:dev": "npm run build:grammar && npm run build:examples",
-    "start:dev": "npm run build:dev && npm run start:web"
+    "test:web": "react-scripts test",
+    "test:grammar": "tsx bin/runTest.ts"
   },
   "eslintConfig": {
     "extends": [
