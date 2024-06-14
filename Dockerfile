@@ -28,4 +28,4 @@ RUN npm install serve@14.2.3 \
 
 EXPOSE 8080
 
-CMD [ "npm", "run", "start" ]
+CMD [ "npx", "serve", "-p", "8080", "build" ]
