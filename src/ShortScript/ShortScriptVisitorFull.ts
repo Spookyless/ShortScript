@@ -12,7 +12,6 @@ import {
   MultiplicativeExpressionContext,
   PowerExpressionContext,
   RelationalExpressionContext,  
-  SourceElementContext,
   ThisExpressionContext,
   VariableDefinitionContext,
   VariableDefinitionExpressionContext,
@@ -252,17 +251,11 @@ export class ShortScriptVisitorFull
       return this.callFunction(entity, args);
     } else if (entity instanceof Class) {
       const classObj = entity as Class;
-      if (classObj._constructor) {
-        // if (functionObj instanceof Method) {
-        //   if (functionObj.returnType === functionObj.class.name) {
-        //     whatToReturn = new ClassInstance(functionObj.class);
-        //   }
-        // }
         const instance = new ClassInstance(classObj);
-        // instance.classPrototype._constructor
-        this.callFunction(classObj._constructor, args, instance);
-        return instance;
-      }
+        if (classObj._constructor) {
+          this.callFunction(classObj._constructor, args, instance);
+        }
+      return instance;
     }
   }
 
