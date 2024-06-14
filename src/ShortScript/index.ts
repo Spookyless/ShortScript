@@ -31,6 +31,6 @@ export function runInterpreter(input: string): InterpretationResult {
       return [...messages, error];
     }
 
-    throw error;
+    return messages;
   }
 }
