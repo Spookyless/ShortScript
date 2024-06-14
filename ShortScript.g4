@@ -315,7 +315,7 @@ primaryExpression
 functionDefinition
 : type Function Identifier
     OpenParen
-        (variableDefinition (Comma variableDefinition)*)?
+        (variableDefinitionInitialization (Comma variableDefinitionInitialization)*)?
     CloseParen
     OpenBrace
         sourceElement*
@@ -331,30 +331,20 @@ returnStatement
 classDefinition
     : Class Identifier (InheritArrow Identifier)?
         OpenBrace
-            (variableDefinitionInitialization | methodDefinition)*
+            (variableDefinitionInitialization | functionDefinition)*
             constructorDefinition?
-            (variableDefinitionInitialization | methodDefinition)*
+            (variableDefinitionInitialization | functionDefinition)*
         CloseBrace
     ;
 
 variableDefinitionInitialization
-    : variableDefinition (assignment expression)?
+    : variableDefinition (Assign expression)?
     ;
 
 constructorDefinition
     : Identifier Identifier (LongArrow | (Assign variableDefinition (Comma variableDefinition)* Arrow))
         OpenBrace
             (Super OpenParen (expression (Comma expression)*)? CloseParen)?
-            sourceElement*
-        CloseBrace
-    ;
-
-methodDefinition
-    : type Function Identifier
-        OpenParen
-            (variableDefinition (Comma variableDefinition)*)?
-        CloseParen
-        OpenBrace
             sourceElement*
         CloseBrace
     ;

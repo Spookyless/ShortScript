@@ -210,7 +210,7 @@ export class ShortScriptVisitorFull
     const identifier = ctx.Identifier().text;
     const functionBody = ctx.sourceElement();
 
-    const functionArgs = ctx.variableDefinition();
+    const functionArgs = ctx.variableDefinitionInitialization().map(el => el.variableDefinition());
     let args: string[][] = [];
 
     if (functionArgs) {
@@ -268,7 +268,7 @@ export class ShortScriptVisitorFull
     }
 
     functionObj.args.forEach((el, key) => {
-      contextStack.set(el[1], args[key], false);
+      contextStack.set(el[1], key < args.length ? args[key] : el[2], false);
     });
 
     let whatToReturn = null;
@@ -433,24 +433,28 @@ export class ShortScriptVisitorFull
 
     for (const field of ctx.variableDefinitionInitialization()) {
       const fieldName = field.variableDefinition().Identifier().text;
-      if (field.assignment()) {
+      if (field.Assign()) {
         classPrototype.fields[fieldName] = this.visit(field.expression()!);
       } else {
         classPrototype.fields[fieldName] = null;
       }
     }
 
-    for (const method of ctx.methodDefinition()) {
+    for (const method of ctx.functionDefinition()) {
       const methodName = method.Identifier().text;
       const returnType = method.type().text;
 
       const methodObj = new Method(
-          classPrototype,
-          method.type().text,
-          method
-              .variableDefinition()
-              .map((arg) => [arg.type().text, arg.Identifier().text]),
-          method.sourceElement()
+        classPrototype,
+        method.type().text,
+        method
+          .variableDefinitionInitialization()
+          .map((arg) => [
+            arg.variableDefinition().type().text,
+            arg.variableDefinition().Identifier().text,
+            arg.expression() ? this.visit(arg.expression()!) : null
+          ]),
+        method.sourceElement()
       );
 
       if (returnType === className) {
