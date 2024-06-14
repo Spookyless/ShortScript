@@ -119,6 +119,8 @@ expression
     | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression  // TODO use arguments (required change in visitor)
     | entityCall #EntityCallExpression
     | literal # LiteralExpression
+    | (This | Identifier) (Dot Identifier)+ assignment expression # DotAssignmentExpression
+    | This # ThisExpression
     | Super # SuperExpression
     | Identifier # IdentifierExpression
 
@@ -201,7 +203,7 @@ binaryLogicOperator
     | NotEquals
     | And
     | Or
-    ;             
+    ;
 
 binaryArithmeticOperator
     : Plus
@@ -224,7 +226,7 @@ unaryArithmeticOperator
 subscriptOperator
     : OpenBracket expression CloseBracket
     ;
-    
+
 
 // ========== Variables and types ==========
 
@@ -278,7 +280,7 @@ loopBody
     ;
 
 nLoopHead
-    : Loop OpenParen expr=expression CloseParen 
+    : Loop OpenParen expr=expression CloseParen
     ;
 
 forLoopHead
@@ -312,11 +314,11 @@ primaryExpression
 
 functionDefinition
 : type Function Identifier
-    OpenParen 
-        (variableDefinition (Comma variableDefinition)*)? 
-    CloseParen 
-    OpenBrace 
-        sourceElement*        
+    OpenParen
+        (variableDefinition (Comma variableDefinition)*)?
+    CloseParen
+    OpenBrace
+        sourceElement*
     CloseBrace
 ;
 
@@ -343,7 +345,7 @@ constructorDefinition
     : Identifier Identifier (LongArrow | (Assign variableDefinition (Comma variableDefinition)* Arrow))
         OpenBrace
             (Super OpenParen (expression (Comma expression)*)? CloseParen)?
-            methodBodyElement*
+            sourceElement*
         CloseBrace
     ;
 
@@ -353,17 +355,6 @@ methodDefinition
             (variableDefinition (Comma variableDefinition)*)?
         CloseParen
         OpenBrace
-            methodBodyElement*
+            sourceElement*
         CloseBrace
     ;
-
-methodBodyElement
-    : (statement | classExpression)
-    ;
-
-classExpression
-    : expression # NormalExpression
-    | This (Dot expression)? # ThisExpression
-    | Super Dot expression # SuperDotExpression
-    ;
-

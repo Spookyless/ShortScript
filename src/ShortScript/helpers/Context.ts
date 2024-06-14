@@ -1,3 +1,5 @@
+import {ClassInstance} from "./VariableTypes";
+
 export enum ContextType {
   GLOBAL,
   BLOCK,
@@ -18,9 +20,18 @@ export class Context {
 
   constructor(
     type: ContextType = ContextType.GLOBAL,
-    context: Context | null = null
+    parent: Context | null = null
   ) {
     this.type = type;
-    this.parent = context;
+    this.parent = parent;
+  }
+}
+
+export class ClassContext extends Context {
+  public readonly classInstance: ClassInstance;
+
+  constructor(classInstance: ClassInstance, parent: Context) {
+    super(ContextType.CLASS, parent);
+    this.classInstance = classInstance;
   }
 }

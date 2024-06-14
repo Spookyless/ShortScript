@@ -1,4 +1,5 @@
-import { Context, ContextType } from "./Context";
+import {ClassContext, Context, ContextType} from "./Context";
+import {ClassInstance} from "./VariableTypes";
 
 export class ContextStack {
   private readonly stack: Context[] = [];
@@ -15,7 +16,17 @@ export class ContextStack {
   }
 
   public pushContext(type: ContextType): Context {
+    if(type !== ContextType.CLASS) throw new Error("Class have to be pushed with pushClassContext method")
+
     const c = new Context(type, this.top);
+
+    this.stack.push(c);
+
+    return c;
+  }
+
+  public pushClassContext(classInstance: ClassInstance): Context {
+    const c = new ClassContext(classInstance, this.top);
 
     this.stack.push(c);
 
@@ -46,6 +57,20 @@ export class ContextStack {
     return false;
   }
 
+  public nearestContext(type: ContextType): Context | null {
+    let currContext: Context | null = this.top;
+
+    while (currContext !== null) {
+      if (currContext.type === type) {
+        return currContext;
+      }
+
+      currContext = currContext.parent;
+    }
+
+    return null;
+  }
+
   public get(identifier: string): any | null {
     let currContext: Context | null = this.top;
 
@@ -66,7 +91,7 @@ export class ContextStack {
     while (currContext !== null) {
       if (currContext.entities.hasOwnProperty(identifier)) {
         currContext.entities[identifier] = value;
-        return;
+        return value;
       }
 
       if (!bubble) {
