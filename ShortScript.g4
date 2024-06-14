@@ -63,14 +63,10 @@ FloatLiteral
     | '.' [0-9]+
     ;
 
-
-
 Whitespace: [ \t\n\r\f]+ -> skip ;
-// Whitespace: [\s]+ -> skip ;
 
 MultiLineComment  : '/*' .*? '*/'             -> channel(HIDDEN);
 SingleLineComment : '//' ~[\r\n\u2028\u2029]* -> channel(HIDDEN); // line terminators
-
 
 // Keywords
 Break                      : 'br';
@@ -86,7 +82,6 @@ This                       : 't';
 Super                      : '^';
 
 Print                      : 'print';
-
 
 Identifier: [a-zA-Z_][a-zA-Z_0-9]*;
 
@@ -116,8 +111,7 @@ expression
     | Print arguments # PrintExpression
     | expression subscriptOperator # IdentifierSubscriptExpression
     | expression Dot Identifier arguments? # IdentifierDotExpression
-    | Identifier OpenParen (expression (Comma expression)*)? CloseParen # IdentifierCallExpression  // TODO use arguments (required change in visitor)
-//    | entityCall #EntityCallExpression
+    | Identifier arguments # IdentifierCallExpression
     | literal # LiteralExpression
     | (This | Identifier) (Dot Identifier)+ assignment expression # DotAssignmentExpression
     | This # ThisExpression
@@ -230,7 +224,6 @@ subscriptOperator
 
 // ========== Variables and types ==========
 
-
 type
     : NumberTypeLiteral
     | BooleanTypeLiteral
@@ -262,6 +255,7 @@ dictionaryLiteral
 arrayLiteral
     : OpenBracket (expression Comma)* expression? CloseBracket
     ;
+
 
 // ========== Loops ==========
 
@@ -299,18 +293,8 @@ continueStatement
     : Continue
     ;
 
-// ========== function ==========
-// Do zmiany
-entityCall
-    : primaryExpression OpenParen (expression (Comma expression)*)? CloseParen
-    ;
 
-primaryExpression
-    : Identifier subscriptOperator? (Dot expression)?
-    | Super
-    | literal
-    | OpenParen expression CloseParen
-    ;
+// ========== function ==========
 
 functionDefinition
 : type Function Identifier
@@ -326,25 +310,16 @@ returnStatement
     : Return expression?
     ;
 
+
 // ========== Classes ==========
 
 classDefinition
     : Class Identifier (InheritArrow Identifier)?
         OpenBrace
             (variableDefinitionInitialization | functionDefinition)*
-            constructorDefinition?
-            (variableDefinitionInitialization | functionDefinition)*
         CloseBrace
     ;
 
 variableDefinitionInitialization
     : variableDefinition (Assign expression)?
-    ;
-
-constructorDefinition
-    : Identifier Identifier (LongArrow | (Assign variableDefinition (Comma variableDefinition)* Arrow))
-        OpenBrace
-            (Super OpenParen (expression (Comma expression)*)? CloseParen)?
-            sourceElement*
-        CloseBrace
     ;

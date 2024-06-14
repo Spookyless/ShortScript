@@ -100,6 +100,12 @@ function App() {
               onValueChange={code => setText(code)}
               highlight={code => addLineNumbers(highlightErrors(highlight(code), errorLines))}
               padding={10}
+              onKeyDown={(event) => {
+                if (event.ctrlKey && event.key === 'Enter') {
+                  event.preventDefault()
+                  handleRun();
+                }
+              }}
             />
           </div>
           <pre className='output'>

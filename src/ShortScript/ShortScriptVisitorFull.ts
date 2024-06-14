@@ -11,7 +11,7 @@ import {
   LoopStatementContext,
   MultiplicativeExpressionContext,
   PowerExpressionContext,
-  RelationalExpressionContext,  
+  RelationalExpressionContext,
   ThisExpressionContext,
   VariableDefinitionContext,
   VariableDefinitionExpressionContext,
@@ -29,25 +29,23 @@ import {
   DotAssignmentExpressionContext,
 } from "./antlr/ShortScriptParser";
 
-import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { ShortScriptVisitor } from "./antlr/ShortScriptVisitor";
-import { ErrorNode } from "antlr4ts/tree/ErrorNode";
-import { RuleNode } from "antlr4ts/tree/RuleNode";
-import { ParseTree } from "antlr4ts/tree/ParseTree";
-import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
-import { LineError } from "./helpers/LineError";
+import {TerminalNode} from "antlr4ts/tree/TerminalNode";
+import {ShortScriptVisitor} from "./antlr/ShortScriptVisitor";
+import {ErrorNode} from "antlr4ts/tree/ErrorNode";
+import {RuleNode} from "antlr4ts/tree/RuleNode";
+import {ParseTree} from "antlr4ts/tree/ParseTree";
+import {AbstractParseTreeVisitor} from "antlr4ts/tree/AbstractParseTreeVisitor";
+import {LineError} from "./helpers/LineError";
 import BreakException from "./Exceptions/BreakException";
 import ContinueException from "./Exceptions/ContinueException";
 import ReturnException from "./Exceptions/ReturnException";
-import { ContextStack } from "./helpers/ContextStack";
+import {ContextStack} from "./helpers/ContextStack";
 import {ClassContext, ContextType} from "./helpers/Context";
-import { ParserRuleContext } from "antlr4ts";
+import {ParserRuleContext} from "antlr4ts";
 import {Class, ClassInstance, FunctionValue, Method} from "./helpers/VariableTypes";
 
 
-
 const contextStack = new ContextStack();
-
 
 
 export class ShortScriptVisitorFull
@@ -66,21 +64,21 @@ export class ShortScriptVisitorFull
   };
 
   visitMultiplicativeExpression: (ctx: MultiplicativeExpressionContext) => any = (ctx) => {
-        const left = this.visit(ctx._left);
-        const right = this.visit(ctx._right);
+    const left = this.visit(ctx._left);
+    const right = this.visit(ctx._right);
 
-        if (ctx.Divide()) {
-          return left / right;
-        }
+    if (ctx.Divide()) {
+      return left / right;
+    }
 
-        if (ctx.Modulus()) {
-          return left % right;
-        }
+    if (ctx.Modulus()) {
+      return left % right;
+    }
 
-        if (ctx.Multiply()) {
-          return left * right;
-        }
-      };
+    if (ctx.Multiply()) {
+      return left * right;
+    }
+  };
 
   visitAdditiveExpression: (ctx: AdditiveExpressionContext) => any = (ctx) => {
     const left = this.visit(ctx._left);
@@ -100,7 +98,6 @@ export class ShortScriptVisitorFull
     const right = this.visit(ctx._right);
     const operator = ctx._op;
 
-    // TODO Zrobić to w eleganstszy sposób
     if (operator.text === "<") {
       return left < right;
     } else if (operator.text === "<=") {
@@ -221,25 +218,18 @@ export class ShortScriptVisitorFull
     }
 
     contextStack.set(
-        identifier,
-        new FunctionValue(returnType, args, functionBody)
+      identifier,
+      new FunctionValue(returnType, args, functionBody)
     );
 
     return null;
   }
 
   visitIdentifierCallExpression(ctx: IdentifierCallExpressionContext): any {
-    // TODO Sprawdzanie zwracanych typów
-
-    // TODO po lewej może być expression
-    // 		const a = () => {}
-    // 		const b = () => a
-    // 		b()()
-
     const identifier = ctx.Identifier().text;
-    const args = ctx.expression()
-        ? ctx.expression().map((exp: ExpressionContext) => this.visit(exp))
-        : [];
+    const args = ctx.arguments()
+      ? ctx.arguments()!.expression().map((exp: ExpressionContext) => this.visit(exp))
+      : [];
 
     const entity = contextStack.get(identifier);
 
@@ -251,10 +241,10 @@ export class ShortScriptVisitorFull
       return this.callFunction(entity, args);
     } else if (entity instanceof Class) {
       const classObj = entity as Class;
-        const instance = new ClassInstance(classObj);
-        if (classObj._constructor) {
-          this.callFunction(classObj._constructor, args, instance);
-        }
+      const instance = new ClassInstance(classObj);
+      if (classObj._constructor) {
+        this.callFunction(classObj._constructor, args, instance);
+      }
       return instance;
     }
   }
@@ -289,7 +279,7 @@ export class ShortScriptVisitorFull
     contextStack.popContext();
 
     return whatToReturn;
-  }  
+  }
 
   visitReturnStatement: (ctx: ReturnStatementContext) => any = (ctx) => {
     const expression = ctx.expression();
@@ -403,10 +393,8 @@ export class ShortScriptVisitorFull
   visitClassDefinition(ctx: ClassDefinitionContext): any {
     const className = ctx.Identifier()[0].text;
 
-    // Create a new class object
     const classPrototype = contextStack.set(className, new Class(className));
 
-    // Check if the class has a superclass
     if (ctx.InheritArrow()) {
       const superclassName = ctx.Identifier()[1].text;
       const superclass = contextStack.get(superclassName);
@@ -416,19 +404,6 @@ export class ShortScriptVisitorFull
       }
 
       classPrototype.superclass = superclass;
-    }
-
-    const constructor = ctx.constructorDefinition();
-
-    if (constructor) {
-      (classPrototype as Class)._constructor = new Method(
-          classPrototype,
-          className,
-          constructor
-              .variableDefinition()
-              .map((arg) => [arg.type().text, arg.Identifier().text]),
-          constructor.sourceElement()
-      );
     }
 
     for (const field of ctx.variableDefinitionInitialization()) {
@@ -467,41 +442,41 @@ export class ShortScriptVisitorFull
 
   visitIdentifierDotExpression(ctx: IdentifierDotExpressionContext): any {
     const classObj = this.visit(ctx.expression());
-    if (classObj instanceof ClassInstance) {
-      const memberOrMethodName = ctx.Identifier().text;
 
-      if (
-          !classObj.fields.hasOwnProperty(memberOrMethodName) &&
-          !classObj.classPrototype.methods.hasOwnProperty(memberOrMethodName)
-      ) {
-        this.throwLineError(
-            ctx,
-            `Member or method ${memberOrMethodName} does not exist in class`
-        );
-      }
-      if (ctx.arguments()) {
-        const method = classObj.classPrototype.methods[memberOrMethodName];
-
-        if (!method) {
-          this.throwLineError(
-              ctx,
-              `${memberOrMethodName} is not a method of class`
-          );
-        }
-
-        const args = ctx
-            .arguments()!
-            .expression()
-            .map((argCtx) => this.visit(argCtx));
-
-        return this.callFunction(method, args, classObj);
-      }
-
-      return classObj.fields[memberOrMethodName];
-    } else {
+    if (!(classObj instanceof ClassInstance)) {
       this.throwLineError(ctx, "Expression is not an instance of a class");
     }
 
+    const memberOrMethodName = ctx.Identifier().text;
+
+    if (
+      !classObj.fields.hasOwnProperty(memberOrMethodName) &&
+      !classObj.classPrototype.methods.hasOwnProperty(memberOrMethodName)
+    ) {
+      this.throwLineError(
+        ctx,
+        `Member or method ${memberOrMethodName} does not exist in class`
+      );
+    }
+    if (ctx.arguments()) {
+      const method = classObj.classPrototype.methods[memberOrMethodName];
+
+      if (!method) {
+        this.throwLineError(
+          ctx,
+          `${memberOrMethodName} is not a method of class`
+        );
+      }
+
+      const args = ctx
+        .arguments()!
+        .expression()
+        .map((argCtx) => this.visit(argCtx));
+
+      return this.callFunction(method, args, classObj);
+    }
+
+    return classObj.fields[memberOrMethodName];
   }
 
   visitDotAssignmentExpression(ctx: DotAssignmentExpressionContext): any {
@@ -543,9 +518,9 @@ export class ShortScriptVisitorFull
       const identifier = contextStack.get(ctx.Identifier()[ctx.Identifier().length - 1].text);
 
       this.handleAssignment(
-          assignment,
-          identifier,
-          this.visit(ctx.expression())
+        assignment,
+        identifier,
+        this.visit(ctx.expression())
       )
     }
 
@@ -572,7 +547,7 @@ export class ShortScriptVisitorFull
 
   visitConditional: (ctx: ConditionalContext) => any = (ctx) => {
     const visitConditionalBlock = (
-        conditionalBlock: IfConditionalContext | EifConditionalContext
+      conditionalBlock: IfConditionalContext | EifConditionalContext
     ) => {
       const head = conditionalBlock.conditionalHead();
       const expr = head.expression();
